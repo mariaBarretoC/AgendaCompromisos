@@ -17,6 +17,7 @@
  * - Evidencia (1 imagen por compromiso): subir / ver / descargar / eliminar
  * - Eliminar compromisos (individual / masivo)
  */
+require("dotenv").config();
 
 const express = require("express");     // Framework web
 const cors = require("cors");           // Permite llamadas desde tu frontend (CORS)
@@ -41,10 +42,10 @@ app.use(express.json());   // Permite recibir JSON en body
 // Configuración MySQL
 // ---------------------------
 const dbConfig = {
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "agenda_compromisos",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
 };
 
@@ -1236,14 +1237,11 @@ app.post("/compromisos/delete-bulk", async (req, res) => {
 // =========================================================
 //  ARRANQUE
 // =========================================================
-const PORT = process.env.PORT || 3000;
+
+  const PORT = process.env.PORT || 3000;
 
 initDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor iniciado en puerto ${PORT}`);
-    });
-  })
+  .then(() => app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`)))
   .catch((e) => {
     console.error("❌ No se pudo conectar a MySQL:", e.message);
     process.exit(1);
