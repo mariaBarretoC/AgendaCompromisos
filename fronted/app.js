@@ -8,7 +8,8 @@
  * - Eliminar seleccionados (bulk)
  */
 
-const API = "http://localhost:3000";
+// aqui se conecta el frontend con el backend. Si cambias el puerto o dominio del backend, actualiza esta variable:
+const API = "https://agendacompromisos.onrender.com";
 
 // =======================
 // DOM básicos
