@@ -33,12 +33,19 @@ const app = express();
 // ---------------------------
 // Middlewares globales
 // ---------------------------
+const allowedOrigins = [
+  "https://agendacompromisos.pages.dev",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+];
+
 app.use(cors({
-  origin: [
-    "https://agendacompromisos.pages.dev/",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500"
-  ]
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // Postman / curl
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS bloqueado: " + origin));
+  },
+  credentials: false,
 }));
 
 // ---------------------------
