@@ -1,0 +1,231 @@
+/* ================================
+   AGENDA.CSS (Agenda de Reuniones)
+================================ */
+
+/* -------- Variables corporativas -------- */
+:root{
+  --brand1:#006E77;  /* teal oscuro */
+  --brand2:#00A6B4;  /* turquesa */
+
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --line:#e5e7eb;
+
+  --shadow: 0 10px 24px rgba(15,23,42,.08);
+  --radius:14px;
+
+  /* altura aprox del navbar (para sticky de tabla si lo necesitas) */
+  --topbar-h: 76px;
+}
+
+/* -------- Base -------- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background:var(--bg);
+  overflow-x:hidden;
+}
+
+/* ================================
+   NAVBAR / TOPBAR
+================================ */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  /* Full width aunque haya contenedores */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+
+  color:#fff;
+  background: linear-gradient(90deg, var(--brand1), var(--brand2));
+  padding:14px 18px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+
+  box-shadow: 0 10px 20px rgba(0,0,0,.08);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width: 240px;
+}
+
+.brand__logo{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  object-fit:contain;
+  background:#fff;
+  border:1px solid rgba(255,255,255,.35);
+}
+
+.brand__title{
+  font-weight:900;
+  letter-spacing:.3px;
+  line-height: 1.05;
+}
+.brand__subtitle{
+  font-size:12px;
+  opacity:.92;
+  margin-top:2px;
+}
+
+.topnav{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.navlink{
+  color:#fff;
+  text-decoration:none;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.08);
+  font-weight:800;
+  white-space: nowrap;
+}
+.navlink:hover{ background: rgba(255,255,255,.14); }
+
+.navlink--active{
+  background: rgba(255,255,255,.22);
+  border-color: rgba(255,255,255,.35);
+}
+
+/* Botón del navbar */
+.btn{
+  border:1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.10);
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:800;
+  color:#fff;
+  line-height:1;
+}
+.btn:hover{ background: rgba(255,255,255,.16); }
+
+/* ================================
+   CONTENEDOR PRINCIPAL
+================================ */
+.page{
+  width:min(1200px, 96vw);
+  margin:18px auto 28px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:14px;
+}
+
+.card__title{
+  margin:0;
+  font-size:18px;
+  font-weight:900;
+}
+.card__subtitle{
+  margin:6px 0 0;
+  font-size:12px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+/* ================================
+   TABLA AGENDA
+================================ */
+.tableWrap{
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  overflow:auto; /* scroll x/y si se necesita */
+}
+
+/* tabla */
+.agenda{
+  width:100%;
+  border-collapse:collapse;
+  min-width: 980px; /* fuerza scroll horizontal en pantallas pequeñas */
+}
+
+/* encabezado sticky */
+.agenda thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background:#f9fbff;
+  color:var(--muted);
+  font-size:12px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+
+  padding:12px;
+  border-bottom:1px solid var(--line);
+  text-align:center;
+}
+
+/* primera columna (HORA) sticky */
+.agenda tbody th{
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background:#f8fafc;
+  font-weight:900;
+  color:#0f172a;
+  border-right:1px solid var(--line);
+  width:120px;
+}
+
+/* celdas */
+.agenda td, .agenda tbody th{
+  border-bottom:1px solid var(--line);
+  padding:12px;
+  text-align:center;
+  vertical-align: middle;
+  font-size:13px;
+}
+
+/* filas: efecto zebra + hover */
+.agenda tbody tr:nth-child(even){
+  background:#fbfdff;
+}
+.agenda tbody tr:hover{
+  background:#f1f6ff;
+}
+
+/* celdas vacías con look “editable” */
+.agenda td{
+  background: transparent;
+  cursor: pointer;
+}
+.agenda td:hover{
+  outline: 2px solid rgba(0,166,180,.18);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 720px){
+  .brand{ min-width: 0; }
+  .brand__title{ font-size:14px; }
+}

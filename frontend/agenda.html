@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Programación de Reuniones</title>
+  <link rel="stylesheet" href="./agenda.css" />
+</head>
+
+<body>
+
+  <!-- =======================
+       HEADER / NAVBAR
+  ======================== -->
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand__logo" src="./logo1.png" alt="Logo Hesego" />
+      <div class="brand__text">
+        <div class="brand__title">Agenda de Compromisos</div>
+        <div class="brand__subtitle">Hesego Ingeniería S.A.S</div>
+      </div>
+    </div>
+
+    <nav class="topnav">
+      <a class="navlink" href="./index.html">Registrar Compromiso</a>
+      <a class="navlink" href="./Compromisos.html"> Compromisos</a>
+      <a class="navlink" href="./Checklist.html">Checklist</a>
+      <button id="btn-recargar" class="btn" type="button" title="Recargar agenda">
+        ⟲ Recargar
+      </button>
+    </nav>
+  </header>
+
+  <!-- =======================
+       CONTENIDO
+  ======================== -->
+  <main class="page">
+    <section class="card">
+      <h2 class="card__title">Programación de Reuniones</h2>
+      <p class="card__subtitle">Agenda semanal (08:00 A.M – 05:00 P.M). Haz clic en una celda para programar.</p>
+
+      <div class="tableWrap">
+        <table class="agenda">
+          <thead>
+            <tr>
+              <th>HORA</th>
+              <th>LUNES</th>
+              <th>MARTES</th>
+              <th>MIÉRCOLES</th>
+              <th>JUEVES</th>
+              <th>VIERNES</th>
+              <th>SÁBADO</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <th>08:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>08:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>09:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>09:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>10:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>10:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>11:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>11:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>12:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>12:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>01:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>01:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>02:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>02:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>03:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>03:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>04:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>04:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+              <th>05:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- (Opcional) JS para el botón recargar -->
+  <script>
+    document.getElementById("btn-recargar")?.addEventListener("click", () => {
+      location.reload();
+    });
+  </script>
+
+</body>
+</html>
