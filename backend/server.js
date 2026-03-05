@@ -34,9 +34,12 @@ const app = express();
 // Middlewares globales
 // ---------------------------
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*",
-}));           // Habilita CORS para tu frontend
-app.use(express.json());   // Permite recibir JSON en body
+  origin: [
+    "https://agendacompromisos.pages.dev/",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+  ]
+}));
 
 // ---------------------------
 // Configuración MySQL
