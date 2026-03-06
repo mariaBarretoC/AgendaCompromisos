@@ -43,7 +43,6 @@ function uploadBufferToCloudinary(buffer, folder = "agenda-compromisos") {
   });
 }
 
-const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 
