@@ -17,7 +17,34 @@
  * - Evidencia (1 imagen por compromiso): subir / ver / descargar / eliminar
  * - Eliminar compromisos (individual / masivo)
  */
+
+// Configuración de Cloudinary (para usarlo para evidencias en lugar de disco local)
+const cloudinary = require("cloudinary").v2;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+function uploadBufferToCloudinary(buffer, folder = "agenda-compromisos") {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    stream.end(buffer);
+  });
+}
+
 require("dotenv").config();
+
 
 const express = require("express");     // Framework web
 const cors = require("cors");           // Permite llamadas desde tu frontend (CORS)
@@ -121,12 +148,10 @@ app.use("/uploads", express.static(UPLOAD_DIR));
  * Multer storage para evidencias: guarda en disco.
  * Se crea un nombre único: timestamp + nombre original "seguro".
  */
-const storageEvidencias = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const safeOriginal = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-    cb(null, `${Date.now()}_${safeOriginal}`);
-  },
+const uploadEvidencia = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: fileFilterImagen,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
 // Filtro: solo imágenes permitidas
@@ -135,13 +160,6 @@ function fileFilterImagen(req, file, cb) {
   if (!ok) return cb(new Error("Solo se permiten imágenes JPG, PNG o WEBP"), false);
   cb(null, true);
 }
-
-// Config de subida evidencia: máx 5MB
-const uploadEvidencia = multer({
-  storage: storageEvidencias,
-  fileFilter: fileFilterImagen,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
 
 // =========================================================
 //  IMPORT EXCEL (xlsx) - usa memoria (NO disco)
@@ -710,37 +728,59 @@ app.patch("/compromisos/:id/observacion", async (req, res) => {
 app.post("/compromisos/:id/evidencia", uploadEvidencia.single("file"), async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
-    if (!compromisoId) return res.status(400).json({ error: "ID inválido" });
+    if (!compromisoId) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
 
-    // valida que el compromiso exista
-    const [c] = await pool.query("SELECT id FROM compromisos WHERE id = ?", [compromisoId]);
-    if (!c.length) return res.status(404).json({ error: "No existe el compromiso" });
-
-    if (!req.file) return res.status(400).json({ error: "No se recibió archivo (field: file)" });
-
-    // 1) Si ya existe evidencia -> borrar (BD + archivo)
-    const [prev] = await pool.query(
-      "SELECT id, filename FROM evidencias WHERE compromiso_id = ? LIMIT 1",
+    // 1) Validar que el compromiso exista
+    const [compromisos] = await pool.query(
+      "SELECT id FROM compromisos WHERE id = ?",
       [compromisoId]
     );
 
-    if (prev.length) {
-      const prevFile = path.join(UPLOAD_DIR, prev[0].filename);
-      await pool.query("DELETE FROM evidencias WHERE id = ?", [prev[0].id]);
-      if (fs.existsSync(prevFile)) fs.unlinkSync(prevFile);
+    if (!compromisos.length) {
+      return res.status(404).json({ error: "No existe el compromiso" });
     }
 
-    // 2) Insertar nueva evidencia
-    const url = `/uploads/${req.file.filename}`;
+    // 2) Validar que sí venga archivo
+    if (!req.file) {
+      return res.status(400).json({ error: "No se recibió archivo (field: file)" });
+    }
 
+    // 3) Buscar evidencia previa en la BD
+    const [prev] = await pool.query(
+      "SELECT id, cloudinary_public_id FROM evidencias WHERE compromiso_id = ? LIMIT 1",
+      [compromisoId]
+    );
+
+    // 4) Si ya existía evidencia, borrarla de Cloudinary y de la BD
+    if (prev.length) {
+      if (prev[0].cloudinary_public_id) {
+        await cloudinary.uploader.destroy(prev[0].cloudinary_public_id);
+      }
+
+      await pool.query(
+        "DELETE FROM evidencias WHERE id = ?",
+        [prev[0].id]
+      );
+    }
+
+    // 5) Subir nueva imagen a Cloudinary
+    const uploadResult = await uploadBufferToCloudinary(req.file.buffer);
+
+    const url = uploadResult.secure_url;
+    const publicId = uploadResult.public_id;
+
+    // 6) Guardar evidencia nueva en la BD
     const [ins] = await pool.query(
       `
-      INSERT INTO evidencias (compromiso_id, filename, originalname, mimetype, size, url)
+      INSERT INTO evidencias
+        (compromiso_id, cloudinary_public_id, originalname, mimetype, size, url)
       VALUES (?, ?, ?, ?, ?, ?)
       `,
       [
         compromisoId,
-        req.file.filename,
+        publicId,
         req.file.originalname,
         req.file.mimetype,
         req.file.size,
@@ -748,12 +788,15 @@ app.post("/compromisos/:id/evidencia", uploadEvidencia.single("file"), async (re
       ]
     );
 
+    // 7) Responder al frontend
     res.status(201).json({
       id: ins.insertId,
       compromiso_id: compromisoId,
       url,
       originalname: req.file.originalname,
+      cloudinary_public_id: publicId,
     });
+
   } catch (err) {
     console.error("Error POST /compromisos/:id/evidencia:", err);
     res.status(500).json({ error: "Error subiendo evidencia" });
@@ -788,26 +831,26 @@ app.get("/compromisos/:id/evidencia", async (req, res) => {
 
 /**
  * GET /compromisos/:id/evidencia/view
- * Abre la imagen en el navegador (inline).
+ * Abre la imagen en el navegador usando la URL guardada en Cloudinary.
  */
 app.get("/compromisos/:id/evidencia/view", async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
-    if (!compromisoId) return res.status(400).json({ error: "ID inválido" });
+    if (!compromisoId) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
 
     const [rows] = await pool.query(
-      "SELECT filename, mimetype, originalname FROM evidencias WHERE compromiso_id = ? LIMIT 1",
+      "SELECT url FROM evidencias WHERE compromiso_id = ? LIMIT 1",
       [compromisoId]
     );
 
-    if (!rows.length) return res.status(404).send("No hay evidencia.");
+    if (!rows.length) {
+      return res.status(404).send("No hay evidencia.");
+    }
 
-    const filePath = path.join(UPLOAD_DIR, rows[0].filename);
-    if (!fs.existsSync(filePath)) return res.status(404).send("Archivo no encontrado.");
+    return res.redirect(rows[0].url);
 
-    res.setHeader("Content-Type", rows[0].mimetype);
-    res.setHeader("Content-Disposition", `inline; filename="${rows[0].originalname}"`);
-    fs.createReadStream(filePath).pipe(res);
   } catch (err) {
     console.error("Error GET /compromisos/:id/evidencia/view:", err);
     res.status(500).json({ error: "Error mostrando evidencia" });
@@ -816,24 +859,26 @@ app.get("/compromisos/:id/evidencia/view", async (req, res) => {
 
 /**
  * GET /compromisos/:id/evidencia/download
- * Descarga la imagen como archivo.
+ * Redirige a la URL de la evidencia en Cloudinary.
  */
 app.get("/compromisos/:id/evidencia/download", async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
-    if (!compromisoId) return res.status(400).json({ error: "ID inválido" });
+    if (!compromisoId) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
 
     const [rows] = await pool.query(
-      "SELECT filename, originalname FROM evidencias WHERE compromiso_id = ? LIMIT 1",
+      "SELECT url FROM evidencias WHERE compromiso_id = ? LIMIT 1",
       [compromisoId]
     );
 
-    if (!rows.length) return res.status(404).send("No hay evidencia.");
+    if (!rows.length) {
+      return res.status(404).send("No hay evidencia.");
+    }
 
-    const filePath = path.join(UPLOAD_DIR, rows[0].filename);
-    if (!fs.existsSync(filePath)) return res.status(404).send("Archivo no encontrado.");
+    return res.redirect(rows[0].url);
 
-    res.download(filePath, rows[0].originalname);
   } catch (err) {
     console.error("Error GET /compromisos/:id/evidencia/download:", err);
     res.status(500).json({ error: "Error descargando evidencia" });
@@ -847,22 +892,32 @@ app.get("/compromisos/:id/evidencia/download", async (req, res) => {
 app.delete("/compromisos/:id/evidencia", async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
-    if (!compromisoId) return res.status(400).json({ error: "ID inválido" });
+    if (!compromisoId) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
 
     const [rows] = await pool.query(
-      "SELECT id, filename FROM evidencias WHERE compromiso_id = ? LIMIT 1",
+      "SELECT id, cloudinary_public_id FROM evidencias WHERE compromiso_id = ? LIMIT 1",
       [compromisoId]
     );
 
-    if (!rows.length) return res.json({ ok: true, deleted: 0 });
+    if (!rows.length) {
+      return res.json({ ok: true, deleted: 0 });
+    }
 
-    const filePath = path.join(UPLOAD_DIR, rows[0].filename);
+    // 1) Borrar imagen en Cloudinary
+    if (rows[0].cloudinary_public_id) {
+      await cloudinary.uploader.destroy(rows[0].cloudinary_public_id);
+    }
 
-    await pool.query("DELETE FROM evidencias WHERE id = ?", [rows[0].id]);
-
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    // 2) Borrar registro de la BD
+    await pool.query(
+      "DELETE FROM evidencias WHERE id = ?",
+      [rows[0].id]
+    );
 
     res.json({ ok: true, deleted: 1 });
+
   } catch (err) {
     console.error("Error DELETE /compromisos/:id/evidencia:", err);
     res.status(500).json({ error: "Error eliminando evidencia" });
