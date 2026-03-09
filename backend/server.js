@@ -1219,14 +1219,6 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
  * DELETE /compromisos/:id
  * Elimina compromiso + su evidencia en Cloudinary si existe
  */
-// =========================================================
-//  ELIMINAR COMPROMISO INDIVIDUAL
-// =========================================================
-
-/**
- * DELETE /compromisos/:id
- * Elimina compromiso + su evidencia en Cloudinary si existe
- */
 app.delete("/compromisos/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -1272,12 +1264,10 @@ app.post("/compromisos/delete-bulk", async (req, res) => {
       return res.status(400).json({ error: "ids es obligatorio" });
     }
 
-    const placeholders = ids.map(() => "?").join(",");
-
     const [evs] = await pool.query(
       `SELECT compromiso_id, cloudinary_public_id
        FROM evidencias
-       WHERE compromiso_id IN (${placeholders})`,
+       WHERE compromiso_id IN (${ids.map(() => "?").join(",")})`,
       ids
     );
 
@@ -1289,31 +1279,20 @@ app.post("/compromisos/delete-bulk", async (req, res) => {
 
     if (evs.length) {
       await pool.query(
-        `DELETE FROM evidencias
-         WHERE compromiso_id IN (${placeholders})`,
+        `DELETE FROM evidencias WHERE compromiso_id IN (${ids.map(() => "?").join(",")})`,
         ids
       );
     }
 
-    await pool.query(
-      `DELETE FROM historial_reprogramaciones
-       WHERE compromiso_id IN (${placeholders})`,
-      ids
-    );
-
     const [del] = await pool.query(
-      `DELETE FROM compromisos
-       WHERE id IN (${placeholders})`,
+      `DELETE FROM compromisos WHERE id IN (${ids.map(() => "?").join(",")})`,
       ids
     );
 
     res.json({ ok: true, deleted_count: del.affectedRows });
   } catch (err) {
     console.error("Error POST /compromisos/delete-bulk:", err);
-    res.status(500).json({
-      error: "Error eliminando en lote",
-      detalle: err.message
-    });
+    res.status(500).json({ error: "Error eliminando en lote" });
   }
 });
 
