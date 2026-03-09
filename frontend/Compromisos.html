@@ -3,14 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Agenda de Compromisos</title>
+  <title>Compromisos</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 
 <body>
-  <!-- =======================
-       HEADER / NAVBAR
-  ======================== -->
   <header class="topbar">
     <div class="brand">
       <img class="brand__logo" src="./logo1.png" alt="Logo Hesego" />
@@ -21,18 +18,15 @@
     </div>
 
     <nav class="topnav">
-      <a class="navlink" href="./index.html">Registrar Compromiso</a>
-      <a class="navlink" href="./agenda.html">Programación Reuniones</a>
+      <a class="navlink" href="./index.html">Programar Compromiso</a>
+      <a class="navlink" href="./Agenda.html">Programación Reuniones</a>
       <a class="navlink" href="./Checklist.html">Checklist</a>
-      <button id="btn-recargar" class="btn btn--ghost" type="button" title="Recargar lista">
-        ⟲ Recargar
-      </button>
+      <button id="btn-recargar" class="btn btn--ghost" type="button">⟲ Recargar</button>
     </nav>
   </header>
+
   <div class="layout">
-    <!-- ===== Sidebar ===== -->
     <aside class="sidebar">
-      <!-- Panel filtros -->
       <section class="panel">
         <div class="panel__title">Filtros</div>
 
@@ -48,12 +42,12 @@
             <option value="Reprogramado">Reprogramado</option>
             <option value="Cerrado">Cerrado</option>
           </select>
-          <div class="hint">Tip: Ctrl/Cmd para seleccionar varios.</div>
+          <div class="hint">Usa Ctrl para seleccionar varios.</div>
         </div>
 
         <div class="field">
           <label for="filtro_responsable">Responsable contiene</label>
-          <input id="filtro_responsable" type="text" placeholder="Ej: Jared" />
+          <input id="filtro_responsable" type="text" placeholder="Ej: María José" />
         </div>
 
         <div class="field">
@@ -65,8 +59,7 @@
           </select>
         </div>
 
-        <!-- NUEVO: filtro único de fechas (sin desde/hasta) -->
-        <div class="panel__subtitle">Filtro de fecha (Día o Mes)</div>
+        <div class="panel__subtitle">Filtro de fecha (día o mes)</div>
 
         <div class="grid3">
           <div class="field">
@@ -90,7 +83,6 @@
 
           <div class="field">
             <label for="date_value">Valor</label>
-            <!-- se cambia dinámicamente entre date y month -->
             <input id="date_value" type="date" />
           </div>
         </div>
@@ -101,20 +93,146 @@
         </div>
       </section>
 
-      <!-- Panel acciones -->
       <section class="panel">
         <div class="panel__title">Acciones</div>
 
         <div class="btncol">
           <button id="btn-exportar" class="btn btn--ghost" type="button">⬇ Exportar Excel</button>
-
-          <button id="btn-importar" class="btn btn--ghost" type="button">⬆ Importar Excel</button>
-          <input id="file-import" type="file" accept=".xlsx" style="display:none" />
-
-          <button id="btn-eliminar-seleccionados" class="btn btn--danger" type="button">
-            🗑 Eliminar seleccionados
-          </button>
+          <button id="btn-eliminar-seleccionados" class="btn btn--danger" type="button">🗑 Eliminar seleccionados</button>
         </div>
       </section>
     </aside>
+
+    <main class="main">
+      <section class="card">
+        <div class="card__header card__header--row">
+          <div>
+            <h2>Compromisos</h2>
+            <div class="card__subtitle">Consulta, filtra y gestiona todos los registros.</div>
+          </div>
+
+          <label class="checkAll">
+            <input id="chk-todos" type="checkbox" />
+            <span>Seleccionar todos</span>
+          </label>
+        </div>
+
+        <div class="tableWrap tableWrap--fixed">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-check"></th>
+                <th>Contrato</th>
+                <th>Responsable</th>
+                <th>Compromiso</th>
+                <th>Creación</th>
+                <th>Entrega</th>
+                <th>Estado</th>
+                <th>Reprog.</th>
+                <th>Cierre</th>
+                <th>Atrasado</th>
+                <th>Observación</th>
+                <th>Evidencia</th>
+                <th class="col-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-compromisos"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
+
+  <!-- Modal Reprogramar -->
+  <dialog id="dlg-reprogramar" class="dlg">
+    <div class="dlg__head">
+      <div class="dlg__title">Reprogramar compromiso</div>
+      <button class="iconbtn" id="btn-cancel-reprog" type="button">✕</button>
+    </div>
+    <div class="dlg__body">
+      <div id="reprog-info" class="hint"></div>
+
+      <div class="field" style="margin-top:10px;">
+        <label for="nueva_fecha">Nueva fecha acordada</label>
+        <input id="nueva_fecha" type="date" />
+      </div>
+
+      <div class="dlg__actions">
+        <button id="btn-ok-reprog" class="btn btn--primary" type="button">Guardar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal Cerrar -->
+  <dialog id="dlg-cerrar" class="dlg">
+    <div class="dlg__head">
+      <div class="dlg__title">Cerrar compromiso</div>
+      <button class="iconbtn" id="btn-cancel-cerrar" type="button">✕</button>
+    </div>
+    <div class="dlg__body">
+      <div id="cerrar-info" class="hint"></div>
+
+      <div class="field" style="margin-top:10px;">
+        <label for="fecha_entrega_compromiso">Fecha entrega real</label>
+        <input id="fecha_entrega_compromiso" type="date" />
+      </div>
+
+      <div class="dlg__actions">
+        <button id="btn-ok-cerrar" class="btn btn--primary" type="button">Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal Historial -->
+  <dialog id="dlg-historial" class="dlg dlg--wide">
+    <div class="dlg__head">
+      <div class="dlg__title">Historial de reprogramaciones</div>
+      <button class="iconbtn" id="btn-cerrar-historial" type="button">✕</button>
+    </div>
+    <div class="dlg__body">
+      <div id="historial-body"></div>
+    </div>
+  </dialog>
+
+  <!-- Modal Observación -->
+  <dialog id="dlg-observacion" class="dlg dlg--wide">
+    <div class="dlg__head">
+      <div class="dlg__title">Observación</div>
+      <button class="iconbtn" id="btn-cancel-obs" type="button">✕</button>
+    </div>
+    <div class="dlg__body">
+      <div id="obs-info" class="hint"></div>
+
+      <div class="grid2" style="margin-top:10px;">
+        <div class="field">
+          <label for="obs-modo">Modo</label>
+          <select id="obs-modo">
+            <option value="append">Agregar (bitácora)</option>
+            <option value="replace">Reemplazar</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:10px;">
+        <div class="field">
+          <label for="obs-actual">Observación actual</label>
+          <textarea id="obs-actual" rows="8" readonly></textarea>
+        </div>
+
+        <div class="field">
+          <label for="obs-texto">Nueva observación</label>
+          <textarea id="obs-texto" rows="8" placeholder="Escribe aquí..."></textarea>
+        </div>
+      </div>
+
+      <div class="dlg__actions">
+        <button id="btn-guardar-obs" class="btn btn--primary" type="button">Guardar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <input id="file-evidencia" type="file" accept="image/*" style="display:none" />
+
+  <script src="./compromisos.js"></script>
+</body>
+</html>
