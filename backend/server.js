@@ -49,16 +49,12 @@ cloudinary.config({
  * - tu frontend publicado en Cloudflare Pages
  * - pruebas locales en Live Server / localhost
  */
-//const allowedOrigins = [
-  //"hhttps://agendacompromisos.pages.dev/",
-  //"http://localhost:5500",
-  //"http://127.0.0.1:5500",
-  //"http://localhost:3000",
-//];
-
-app.use(cors({
-  origin: "*"
-}));
+const allowedOrigins = [
+  "https://agendacompromisos.pages.dev",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+  "http://localhost:3000",
+];
 
 /**
  * Middleware CORS:
