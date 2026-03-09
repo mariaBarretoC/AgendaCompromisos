@@ -1219,6 +1219,14 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
  * DELETE /compromisos/:id
  * Elimina compromiso + su evidencia en Cloudinary si existe
  */
+// =========================================================
+//  ELIMINAR COMPROMISO INDIVIDUAL
+// =========================================================
+
+/**
+ * DELETE /compromisos/:id
+ * Elimina compromiso + su evidencia en Cloudinary si existe
+ */
 app.delete("/compromisos/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -1237,23 +1245,12 @@ app.delete("/compromisos/:id", async (req, res) => {
       await pool.query("DELETE FROM evidencias WHERE compromiso_id = ?", [id]);
     }
 
-    await pool.query(
-      "DELETE FROM historial_reprogramaciones WHERE compromiso_id = ?",
-      [id]
-    );
-
-    const [del] = await pool.query(
-      "DELETE FROM compromisos WHERE id = ?",
-      [id]
-    );
+    const [del] = await pool.query("DELETE FROM compromisos WHERE id = ?", [id]);
 
     res.json({ ok: true, deleted: del.affectedRows });
   } catch (err) {
     console.error("Error DELETE /compromisos/:id:", err);
-    res.status(500).json({
-      error: "Error eliminando compromiso",
-      detalle: err.message
-    });
+    res.status(500).json({ error: "Error eliminando compromiso" });
   }
 });
 
