@@ -9,8 +9,8 @@
  */
 
 // aqui se conecta el frontend con el backend. Si cambias el puerto o dominio del backend, actualiza esta variable:
-const API = window.APP_CONFIG?.API_BASE || "http://localhost:3000";
-
+//const API = window.APP_CONFIG?.API_BASE || "http://localhost:3000";
+const API = "https://agenda-compromisos.onrender.com"; // <- Cambia esto si el backend no está en este dominio
 // =======================
 // DOM básicos
 // =======================
