@@ -50,7 +50,7 @@ cloudinary.config({
  * - pruebas locales en Live Server / localhost
  */
 const allowedOrigins = [
-  "https://agendacompromisos.pages.dev",
+  "hhttps://agendacompromisos.pages.dev/",
   "http://localhost:5500",
   "http://127.0.0.1:5500",
   "http://localhost:3000",
