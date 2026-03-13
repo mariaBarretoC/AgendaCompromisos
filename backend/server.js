@@ -1,18 +1,13 @@
 /**
- * server.js - Agenda de Compromisos (Empresa)
+ * server.js - Agenda de Compromisos
  *
  * Incluye:
  * - CRUD de contratos y compromisos
- * - Filtros avanzados:
- *    - contrato_id
- *    - responsable (LIKE)
- *    - atrasado (1/0)
- *    - multi-estado
- *    - filtro fecha único (día/mes)
- * - Exportar Excel con filtros
- * - Importar Excel (xlsx) a BD
- * - Evidencias en Cloudinary (1 imagen por compromiso)
- * - Eliminar compromisos (individual / masivo)
+ * - Filtros avanzados
+ * - Exportar Excel
+ * - Importar Excel
+ * - Evidencias en Cloudinary
+ * - Eliminar individual / masivo
  */
 
 require("dotenv").config();
@@ -27,28 +22,15 @@ const cloudinary = require("cloudinary").v2;
 const app = express();
 
 // =========================================================
-//  CONFIGURACIÓN GLOBAL
+// CONFIGURACIÓN GLOBAL
 // =========================================================
 
-/**
- * Cloudinary:
- * aquí se configura con variables de entorno.
- * Estas variables deben existir en:
- * - tu archivo .env local
- * - Render (Environment Variables)
- */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-/**
- * Lista de orígenes permitidos para consumir la API.
- * Aquí permitimos:
- * - tu frontend publicado en Cloudflare Pages
- * - pruebas locales en Live Server / localhost
- */
 const allowedOrigins = [
   "https://agendacompromisos.pages.dev",
   "http://localhost:5500",
@@ -56,11 +38,6 @@ const allowedOrigins = [
   "http://localhost:3000",
 ];
 
-/**
- * Middleware CORS:
- * - si el request viene de un origen permitido, entra
- * - si no tiene origin (ej. Postman, curl), también entra
- */
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -70,20 +47,12 @@ app.use(cors({
   credentials: false,
 }));
 
-/**
- * Permite que Express entienda JSON en req.body
- */
 app.use(express.json());
 
 // =========================================================
-//  CONFIGURACIÓN MYSQL
+// MYSQL
 // =========================================================
 
-/**
- * Configuración de BD:
- * - local usa tus variables .env
- * - producción usa variables de Render
- */
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
@@ -94,10 +63,6 @@ const dbConfig = {
 
 let pool;
 
-/**
- * Inicializa el pool de conexiones MySQL.
- * pool permite reutilizar conexiones y es más eficiente.
- */
 async function initDB() {
   pool = await mysql.createPool({
     ...dbConfig,
@@ -111,34 +76,21 @@ async function initDB() {
 }
 
 // =========================================================
-//  HELPERS GENERALES
+// HELPERS
 // =========================================================
 
-/**
- * Retorna la fecha de hoy en formato YYYY-MM-DD
- */
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-/**
- * Valida fecha tipo YYYY-MM-DD
- */
 function isISODate(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-/**
- * Valida mes tipo YYYY-MM
- */
 function isISOMonth(value) {
   return typeof value === "string" && /^\d{4}-\d{2}$/.test(value);
 }
 
-/**
- * Sube un buffer de imagen a Cloudinary.
- * Se usa cuando el usuario carga una evidencia.
- */
 function uploadBufferToCloudinary(buffer, folder = "agenda-compromisos") {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -156,56 +108,67 @@ function uploadBufferToCloudinary(buffer, folder = "agenda-compromisos") {
   });
 }
 
+// Convierte Date / serial Excel / string a YYYY-MM-DD
+function toISODate(value) {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value === "number") {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const d = new Date(excelEpoch.getTime() + value * 86400000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const s = String(value).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) {
+    const dd = String(m[1]).padStart(2, "0");
+    const mm = String(m[2]).padStart(2, "0");
+    const yyyy = m[3];
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  return null;
+}
+
 // =========================================================
-//  SALUD
+// SALUD
 // =========================================================
 
-/**
- * Ruta simple para verificar que la API está viva
- */
 app.get("/", (req, res) => {
   res.send("API Agenda OK ✅");
 });
 
 // =========================================================
-//  MULTER (SUBIDA DE ARCHIVOS)
+// MULTER
 // =========================================================
 
-/**
- * Filtro: solo imágenes válidas
- */
 function fileFilterImagen(req, file, cb) {
   const ok = ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype);
   if (!ok) return cb(new Error("Solo se permiten imágenes JPG, PNG o WEBP"), false);
   cb(null, true);
 }
 
-/**
- * Multer para evidencias:
- * - usa memoria (buffer)
- * - luego subimos ese buffer a Cloudinary
- */
 const uploadEvidencia = multer({
   storage: multer.memoryStorage(),
   fileFilter: fileFilterImagen,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-/**
- * Multer para importar Excel
- */
 const uploadExcel = multer({
   storage: multer.memoryStorage(),
 });
 
 // =========================================================
-//  CONTRATOS
+// CONTRATOS
 // =========================================================
 
-/**
- * GET /contratos
- * Retorna contratos activos para poblar selects
- */
 app.get("/contratos", async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -218,10 +181,6 @@ app.get("/contratos", async (req, res) => {
   }
 });
 
-/**
- * POST /contratos
- * Crea un contrato nuevo
- */
 app.post("/contratos", async (req, res) => {
   try {
     const { nombre } = req.body;
@@ -253,14 +212,9 @@ app.post("/contratos", async (req, res) => {
 });
 
 // =========================================================
-//  FILTROS
+// FILTROS
 // =========================================================
 
-/**
- * Soporta estado múltiple:
- * - estado=Pendiente&estado=Reprogramado
- * - estado=Pendiente,Reprogramado
- */
 function normalizeEstadoMulti(q) {
   const raw = q.estado;
   let list = [];
@@ -273,12 +227,6 @@ function normalizeEstadoMulti(q) {
   return list.map((s) => String(s).trim()).filter((s) => allowed.has(s));
 }
 
-/**
- * Aplica filtro de fecha único:
- * - date_field = creacion|entrega|cierre|reprog
- * - date_mode = day|month
- * - date_value = YYYY-MM-DD o YYYY-MM
- */
 function applySingleDateFilter(query, where, params) {
   const date_field = String(query.date_field || "").trim();
   const date_mode = String(query.date_mode || "").trim();
@@ -358,9 +306,6 @@ function applySingleDateFilter(query, where, params) {
   return null;
 }
 
-/**
- * Construye el WHERE dinámico para listados y exportación
- */
 function buildFilters(query) {
   const { contrato_id, responsable, atrasado } = query;
 
@@ -396,13 +341,9 @@ function buildFilters(query) {
 }
 
 // =========================================================
-//  COMPROMISOS - LISTAR
+// COMPROMISOS - LISTAR
 // =========================================================
 
-/**
- * GET /compromisos
- * Lista compromisos + evidencia si existe
- */
 app.get("/compromisos", async (req, res) => {
   try {
     const built = buildFilters(req.query);
@@ -454,13 +395,9 @@ app.get("/compromisos", async (req, res) => {
 });
 
 // =========================================================
-//  COMPROMISOS - CREAR
+// COMPROMISOS - CREAR
 // =========================================================
 
-/**
- * POST /compromisos
- * Crea un compromiso nuevo
- */
 app.post("/compromisos", async (req, res) => {
   try {
     const { contrato_id, responsable, compromiso, fecha_entrega, observacion_general } = req.body;
@@ -509,13 +446,9 @@ app.post("/compromisos", async (req, res) => {
 });
 
 // =========================================================
-//  COMPROMISOS - REPROGRAMAR
+// COMPROMISOS - REPROGRAMAR
 // =========================================================
 
-/**
- * POST /compromisos/:id/reprogramar
- * Reprograma un compromiso, guarda historial y aumenta contador
- */
 app.post("/compromisos/:id/reprogramar", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -594,7 +527,6 @@ app.post("/compromisos/:id/reprogramar", async (req, res) => {
 
     const [updated] = await pool.query("SELECT * FROM compromisos WHERE id = ?", [id]);
     return res.json(updated[0]);
-
   } catch (err) {
     console.error("Error POST /compromisos/:id/reprogramar:", err);
     return res.status(500).json({ error: "Error reprogramando compromiso" });
@@ -602,13 +534,9 @@ app.post("/compromisos/:id/reprogramar", async (req, res) => {
 });
 
 // =========================================================
-//  COMPROMISOS - CERRAR
+// COMPROMISOS - CERRAR
 // =========================================================
 
-/**
- * POST /compromisos/:id/cerrar
- * Marca compromiso como cerrado y guarda fecha real
- */
 app.post("/compromisos/:id/cerrar", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -646,13 +574,9 @@ app.post("/compromisos/:id/cerrar", async (req, res) => {
 });
 
 // =========================================================
-//  COMPROMISOS - HISTORIAL
+// COMPROMISOS - HISTORIAL
 // =========================================================
 
-/**
- * GET /compromisos/:id/historial
- * Retorna historial de reprogramaciones
- */
 app.get("/compromisos/:id/historial", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -673,13 +597,9 @@ app.get("/compromisos/:id/historial", async (req, res) => {
 });
 
 // =========================================================
-//  COMPROMISOS - OBSERVACIÓN
+// COMPROMISOS - OBSERVACIÓN
 // =========================================================
 
-/**
- * PATCH /compromisos/:id/observacion
- * Guarda o agrega observación general
- */
 app.patch("/compromisos/:id/observacion", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -721,13 +641,9 @@ app.patch("/compromisos/:id/observacion", async (req, res) => {
 });
 
 // =========================================================
-//  EVIDENCIAS - SUBIR
+// EVIDENCIAS - SUBIR
 // =========================================================
 
-/**
- * POST /compromisos/:id/evidencia
- * Sube o reemplaza una evidencia en Cloudinary
- */
 app.post("/compromisos/:id/evidencia", uploadEvidencia.single("file"), async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
@@ -762,7 +678,6 @@ app.post("/compromisos/:id/evidencia", uploadEvidencia.single("file"), async (re
     }
 
     const uploadResult = await uploadBufferToCloudinary(req.file.buffer);
-
     const url = uploadResult.secure_url;
     const publicId = uploadResult.public_id;
 
@@ -770,8 +685,7 @@ app.post("/compromisos/:id/evidencia", uploadEvidencia.single("file"), async (re
       `
       INSERT INTO evidencias
         (compromiso_id, filename, cloudinary_public_id, originalname, mimetype, size, url)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      `,
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         compromisoId,
         publicId,
@@ -797,13 +711,9 @@ app.post("/compromisos/:id/evidencia", uploadEvidencia.single("file"), async (re
 });
 
 // =========================================================
-//  EVIDENCIAS - CONSULTAR
+// EVIDENCIAS - CONSULTAR / VER / DESCARGAR / ELIMINAR
 // =========================================================
 
-/**
- * GET /compromisos/:id/evidencia
- * Retorna metadata de evidencia
- */
 app.get("/compromisos/:id/evidencia", async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
@@ -814,8 +724,7 @@ app.get("/compromisos/:id/evidencia", async (req, res) => {
       SELECT id, url, originalname, mimetype, size, fecha_subida
       FROM evidencias
       WHERE compromiso_id = ?
-      LIMIT 1
-      `,
+      LIMIT 1`,
       [compromisoId]
     );
 
@@ -826,30 +735,17 @@ app.get("/compromisos/:id/evidencia", async (req, res) => {
   }
 });
 
-// =========================================================
-//  EVIDENCIAS - VER
-// =========================================================
-
-/**
- * GET /compromisos/:id/evidencia/view
- * Redirige al archivo en Cloudinary
- */
 app.get("/compromisos/:id/evidencia/view", async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
-    if (!compromisoId) {
-      return res.status(400).json({ error: "ID inválido" });
-    }
+    if (!compromisoId) return res.status(400).json({ error: "ID inválido" });
 
     const [rows] = await pool.query(
       "SELECT url FROM evidencias WHERE compromiso_id = ? LIMIT 1",
       [compromisoId]
     );
 
-    if (!rows.length) {
-      return res.status(404).send("No hay evidencia.");
-    }
-
+    if (!rows.length) return res.status(404).send("No hay evidencia.");
     return res.redirect(rows[0].url);
   } catch (err) {
     console.error("Error GET /compromisos/:id/evidencia/view:", err);
@@ -857,30 +753,17 @@ app.get("/compromisos/:id/evidencia/view", async (req, res) => {
   }
 });
 
-// =========================================================
-//  EVIDENCIAS - DESCARGAR
-// =========================================================
-
-/**
- * GET /compromisos/:id/evidencia/download
- * Redirige al archivo en Cloudinary
- */
 app.get("/compromisos/:id/evidencia/download", async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
-    if (!compromisoId) {
-      return res.status(400).json({ error: "ID inválido" });
-    }
+    if (!compromisoId) return res.status(400).json({ error: "ID inválido" });
 
     const [rows] = await pool.query(
       "SELECT url FROM evidencias WHERE compromiso_id = ? LIMIT 1",
       [compromisoId]
     );
 
-    if (!rows.length) {
-      return res.status(404).send("No hay evidencia.");
-    }
-
+    if (!rows.length) return res.status(404).send("No hay evidencia.");
     return res.redirect(rows[0].url);
   } catch (err) {
     console.error("Error GET /compromisos/:id/evidencia/download:", err);
@@ -888,14 +771,6 @@ app.get("/compromisos/:id/evidencia/download", async (req, res) => {
   }
 });
 
-// =========================================================
-//  EVIDENCIAS - ELIMINAR
-// =========================================================
-
-/**
- * DELETE /compromisos/:id/evidencia
- * Elimina evidencia de Cloudinary + BD
- */
 app.delete("/compromisos/:id/evidencia", async (req, res) => {
   try {
     const compromisoId = Number(req.params.id);
@@ -926,13 +801,9 @@ app.delete("/compromisos/:id/evidencia", async (req, res) => {
 });
 
 // =========================================================
-//  EXPORT EXCEL
+// EXPORT EXCEL
 // =========================================================
 
-/**
- * GET /compromisos/export
- * Exporta compromisos filtrados a Excel
- */
 app.get("/compromisos/export", async (req, res) => {
   try {
     const built = buildFilters(req.query);
@@ -950,13 +821,9 @@ app.get("/compromisos/export", async (req, res) => {
         c.fecha_entrega AS "Fecha Entrega (Acordada)",
         c.estado AS "Estado",
         c.cantidad_reprogramaciones AS "Reprogramaciones",
-        c.fecha_entrega_compromiso AS "Fecha Cierre (Real)",
+        c.fecha_entrega_compromiso AS "Fecha de Entrega compromiso",
         e.url AS "Evidencia (URL)",
-        CASE 
-          WHEN c.estado <> 'Cerrado' AND c.fecha_entrega < CURDATE()
-          THEN 'Sí' ELSE 'No'
-        END AS "Atrasado",
-        c.observacion_general AS "Observación General"
+        c.observacion_general AS "Observación Finalización"
       FROM compromisos c
       JOIN contratos ct ON ct.id = c.contrato_id
       LEFT JOIN evidencias e ON e.compromiso_id = c.id
@@ -982,10 +849,9 @@ app.get("/compromisos/export", async (req, res) => {
           "Fecha Entrega (Acordada)",
           "Estado",
           "Reprogramaciones",
-          "Fecha Cierre (Real)",
+          "Fecha de Entrega compromiso",
           "Evidencia (URL)",
-          "Atrasado",
-          "Observación General",
+          "Observación Finalización",
         ];
 
     ws.columns = columns.map((c) => ({
@@ -1000,7 +866,7 @@ app.get("/compromisos/export", async (req, res) => {
     rows.forEach((r) => ws.addRow(r));
 
     ws.columns.forEach((col) => {
-      if (col.header === "Compromiso" || col.header === "Observación General") {
+      if (col.header === "Compromiso" || col.header === "Observación Finalización") {
         col.alignment = { wrapText: true, vertical: "top" };
         col.width = 60;
       }
@@ -1025,13 +891,9 @@ app.get("/compromisos/export", async (req, res) => {
 });
 
 // =========================================================
-//  IMPORT EXCEL
+// IMPORT EXCEL
 // =========================================================
 
-/**
- * POST /compromisos/import
- * Importa archivo Excel a la base de datos
- */
 app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -1042,7 +904,9 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
     await wb.xlsx.load(req.file.buffer);
 
     const ws = wb.worksheets[0];
-    if (!ws) return res.status(400).json({ error: "El archivo no tiene hojas" });
+    if (!ws) {
+      return res.status(400).json({ error: "El archivo no tiene hojas" });
+    }
 
     const headerRow = ws.getRow(1);
     const headers = {};
@@ -1052,7 +916,19 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
       if (name) headers[name] = colNumber;
     });
 
-    const required = ["Contrato", "Responsable", "Compromiso", "Fecha Entrega (Acordada)"];
+    const required = [
+      "Fecha Creación",
+      "Contrato",
+      "Responsable",
+      "Compromiso",
+      "Fecha Entrega (Acordada)",
+      "Estado",
+      "Reprogramaciones",
+      "Nueva Fecha reprogramación",
+      "Fecha de Entrega compromiso",
+      "Observación Finalización",
+    ];
+
     for (const r of required) {
       if (!headers[r]) {
         return res.status(400).json({ error: `Falta columna requerida: "${r}"` });
@@ -1070,32 +946,6 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
       return v;
     };
 
-    const toISODate = (value) => {
-      if (!value) return null;
-
-      if (value instanceof Date) return value.toISOString().slice(0, 10);
-
-      if (typeof value === "number") {
-        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-        const d = new Date(excelEpoch.getTime() + value * 86400000);
-        return d.toISOString().slice(0, 10);
-      }
-
-      const s = String(value).trim();
-
-      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-
-      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-      if (m) {
-        const dd = String(m[1]).padStart(2, "0");
-        const mm = String(m[2]).padStart(2, "0");
-        const yyyy = m[3];
-        return `${yyyy}-${mm}-${dd}`;
-      }
-
-      return null;
-    };
-
     const [contratosDB] = await pool.query("SELECT id, nombre FROM contratos");
     const contratoMap = new Map(contratosDB.map((c) => [c.nombre.toLowerCase(), c.id]));
 
@@ -1106,14 +956,12 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
     for (let r = 2; r <= ws.rowCount; r++) {
       const row = ws.getRow(r);
 
+      const fechaCreacion = toISODate(getCell(row, "Fecha Creación")) || todayISO();
       const contratoName = String(getCell(row, "Contrato") ?? "").trim();
       const responsable = String(getCell(row, "Responsable") ?? "").trim();
       const compromiso = String(getCell(row, "Compromiso") ?? "").trim();
-
-      if (!contratoName && !responsable && !compromiso) continue;
-
-      const fechaCreacion = toISODate(getCell(row, "Fecha Creación")) || todayISO();
       const fechaEntregaAcordada = toISODate(getCell(row, "Fecha Entrega (Acordada)"));
+      const estadoExcel = String(getCell(row, "Estado") ?? "").trim();
       const nuevaFechaReprog = toISODate(getCell(row, "Nueva Fecha reprogramación"));
       const fechaCierre = toISODate(getCell(row, "Fecha de Entrega compromiso"));
       const observacion = String(getCell(row, "Observación Finalización") ?? "").trim() || null;
@@ -1121,6 +969,19 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
       const reprogramacionesRaw = getCell(row, "Reprogramaciones");
       let cantidadReprog = reprogramacionesRaw !== null ? Number(reprogramacionesRaw) : 0;
       if (!Number.isFinite(cantidadReprog)) cantidadReprog = 0;
+
+      if (
+        !contratoName &&
+        !responsable &&
+        !compromiso &&
+        !fechaEntregaAcordada &&
+        !estadoExcel &&
+        !nuevaFechaReprog &&
+        !fechaCierre &&
+        !observacion
+      ) {
+        continue;
+      }
 
       if (!contratoName || !responsable || !compromiso || !fechaEntregaAcordada) {
         errors.push({
@@ -1140,11 +1001,16 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
         contratoMap.set(contratoName.toLowerCase(), contratoId);
       }
 
+      // Determinar estado final
       let estado = "Pendiente";
-      if (fechaCierre) estado = "Cerrado";
-      else if (nuevaFechaReprog) {
+
+      if (fechaCierre) {
+        estado = "Cerrado";
+      } else if (nuevaFechaReprog) {
         estado = "Reprogramado";
         if (cantidadReprog === 0) cantidadReprog = 1;
+      } else if (["Pendiente", "Reprogramado", "Cerrado"].includes(estadoExcel)) {
+        estado = estadoExcel;
       }
 
       let insertedId = null;
@@ -1212,98 +1078,145 @@ app.post("/compromisos/import", uploadExcel.single("file"), async (req, res) => 
 });
 
 // =========================================================
-//  ELIMINAR COMPROMISO INDIVIDUAL
+// ELIMINAR INDIVIDUAL
 // =========================================================
 
-/**
- * DELETE /compromisos/:id
- * Elimina compromiso + su evidencia en Cloudinary si existe
- */
 app.delete("/compromisos/:id", async (req, res) => {
+  const conn = await pool.getConnection();
+
   try {
     const id = Number(req.params.id);
-    if (!id) return res.status(400).json({ error: "ID inválido" });
+    if (!id) {
+      conn.release();
+      return res.status(400).json({ error: "ID inválido" });
+    }
 
-    const [ev] = await pool.query(
+    await conn.beginTransaction();
+
+    // Buscar evidencia
+    const [ev] = await conn.query(
       "SELECT id, cloudinary_public_id FROM evidencias WHERE compromiso_id = ? LIMIT 1",
       [id]
     );
 
-    if (ev.length) {
-      if (ev[0].cloudinary_public_id) {
-        await cloudinary.uploader.destroy(ev[0].cloudinary_public_id);
+    const cloudinaryPublicId = ev.length ? ev[0].cloudinary_public_id : null;
+
+    // Borrar historial primero
+    await conn.query(
+      "DELETE FROM historial_reprogramaciones WHERE compromiso_id = ?",
+      [id]
+    );
+
+    // Borrar evidencia de la BD
+    await conn.query(
+      "DELETE FROM evidencias WHERE compromiso_id = ?",
+      [id]
+    );
+
+    // Borrar compromiso
+    const [del] = await conn.query(
+      "DELETE FROM compromisos WHERE id = ?",
+      [id]
+    );
+
+    await conn.commit();
+    conn.release();
+
+    // Borrar imagen en Cloudinary después del commit
+    if (cloudinaryPublicId) {
+      try {
+        await cloudinary.uploader.destroy(cloudinaryPublicId);
+      } catch (e) {
+        console.error("No se pudo eliminar la imagen en Cloudinary:", e.message);
       }
-
-      await pool.query("DELETE FROM evidencias WHERE compromiso_id = ?", [id]);
     }
-
-    const [del] = await pool.query("DELETE FROM compromisos WHERE id = ?", [id]);
 
     res.json({ ok: true, deleted: del.affectedRows });
   } catch (err) {
+    await conn.rollback();
+    conn.release();
     console.error("Error DELETE /compromisos/:id:", err);
     res.status(500).json({ error: "Error eliminando compromiso" });
   }
 });
 
 // =========================================================
-//  ELIMINAR COMPROMISOS MASIVO
+// ELIMINAR MASIVO
 // =========================================================
 
-/**
- * POST /compromisos/delete-bulk
- * Elimina varios compromisos + evidencias en Cloudinary
- */
 app.post("/compromisos/delete-bulk", async (req, res) => {
+  const conn = await pool.getConnection();
+
   try {
     const ids = Array.isArray(req.body.ids)
       ? req.body.ids.map(Number).filter(Boolean)
       : [];
 
     if (!ids.length) {
+      conn.release();
       return res.status(400).json({ error: "ids es obligatorio" });
     }
 
-    const [evs] = await pool.query(
+    await conn.beginTransaction();
+
+    // Buscar evidencias
+    const [evs] = await conn.query(
       `SELECT compromiso_id, cloudinary_public_id
        FROM evidencias
        WHERE compromiso_id IN (${ids.map(() => "?").join(",")})`,
       ids
     );
 
-    for (const e of evs) {
-      if (e.cloudinary_public_id) {
-        await cloudinary.uploader.destroy(e.cloudinary_public_id);
-      }
-    }
+    const publicIds = evs
+      .map((e) => e.cloudinary_public_id)
+      .filter(Boolean);
 
-    if (evs.length) {
-      await pool.query(
-        `DELETE FROM evidencias WHERE compromiso_id IN (${ids.map(() => "?").join(",")})`,
-        ids
-      );
-    }
-
-    const [del] = await pool.query(
-      `DELETE FROM compromisos WHERE id IN (${ids.map(() => "?").join(",")})`,
+    // Borrar historial primero
+    await conn.query(
+      `DELETE FROM historial_reprogramaciones
+       WHERE compromiso_id IN (${ids.map(() => "?").join(",")})`,
       ids
     );
 
+    // Borrar evidencias en BD
+    await conn.query(
+      `DELETE FROM evidencias
+       WHERE compromiso_id IN (${ids.map(() => "?").join(",")})`,
+      ids
+    );
+
+    // Borrar compromisos
+    const [del] = await conn.query(
+      `DELETE FROM compromisos
+       WHERE id IN (${ids.map(() => "?").join(",")})`,
+      ids
+    );
+
+    await conn.commit();
+    conn.release();
+
+    // Borrar imágenes en Cloudinary después del commit
+    for (const publicId of publicIds) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (e) {
+        console.error("No se pudo eliminar imagen en Cloudinary:", e.message);
+      }
+    }
+
     res.json({ ok: true, deleted_count: del.affectedRows });
   } catch (err) {
+    await conn.rollback();
+    conn.release();
     console.error("Error POST /compromisos/delete-bulk:", err);
     res.status(500).json({ error: "Error eliminando en lote" });
   }
 });
 
 // =========================================================
-//  ARRANQUE DEL SERVIDOR
+// ARRANQUE
 // =========================================================
 
-/**
- * Render asigna PORT automáticamente.
- * En local usa 3000.
- */
 const PORT = process.env.PORT || 3000;
 
 initDB()
