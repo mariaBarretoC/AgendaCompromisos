@@ -8,9 +8,8 @@
  * - Eliminar seleccionados (bulk)
  */
 
-// aqui se conecta el frontend con el backend. Si cambias el puerto o dominio del backend, actualiza esta variable:
-//const API = window.APP_CONFIG?.API_BASE || "http://localhost:3000";
-const API = "https://agendacompromisos.onrender.com"; // <- Cambia esto si el backend no está en este dominio
+const API = "https://agendacompromisos.onrender.com";
+
 // =======================
 // DOM básicos
 // =======================
@@ -23,26 +22,26 @@ const btnImportar = document.getElementById("btn-importar");
 const fileImport = document.getElementById("file-import");
 const btnEliminarSeleccionados = document.getElementById("btn-eliminar-seleccionados");
 
-const contratoSelect = document.getElementById("contrato_id"); // puede no existir en registros.html
-const form = document.getElementById("form-compromiso");       // puede no existir en registros.html
+const contratoSelect = document.getElementById("contrato_id");
+const form = document.getElementById("form-compromiso");
 
 // =======================
 // Filtros
 // =======================
 const filtroContrato = document.getElementById("filtro_contrato");
-const filtroEstado = document.getElementById("filtro_estado"); // multiple
+const filtroEstado = document.getElementById("filtro_estado");
 const filtroResponsable = document.getElementById("filtro_responsable");
 const filtroAtrasado = document.getElementById("filtro_atrasado");
 
-const dateField = document.getElementById("date_field"); // creacion/entrega/cierre/reprog
-const dateMode = document.getElementById("date_mode");   // day/month
-const dateValue = document.getElementById("date_value"); // input date o month
+const dateField = document.getElementById("date_field");
+const dateMode = document.getElementById("date_mode");
+const dateValue = document.getElementById("date_value");
 
 const btnFiltrar = document.getElementById("btn-filtrar");
 const btnLimpiar = document.getElementById("btn-limpiar");
 
 // =======================
-// Modales (si existen)
+// Modales
 // =======================
 const dlgReprog = document.getElementById("dlg-reprogramar");
 const reprogInfo = document.getElementById("reprog-info");
@@ -133,19 +132,17 @@ async function apiDelete(path) {
 }
 
 // =======================
-// UI: cambiar input date/month
+// UI: date / month
 // =======================
 function syncDateInputType() {
-  // Si es “month” usamos input type="month"
-  // Si es “day” usamos input type="date"
   if (dateMode.value === "month") {
     dateValue.type = "month";
   } else {
     dateValue.type = "date";
   }
 }
-dateMode.addEventListener("change", syncDateInputType);
-syncDateInputType();
+dateMode?.addEventListener("change", syncDateInputType);
+if (dateMode && dateValue) syncDateInputType();
 
 // =======================
 // Contratos
@@ -153,7 +150,6 @@ syncDateInputType();
 async function cargarContratos() {
   const contratos = await apiGet("/contratos");
 
-  // Select crear (solo si existe en esta página)
   if (contratoSelect) {
     contratoSelect.innerHTML = "";
     contratos.forEach((c) => {
@@ -164,18 +160,19 @@ async function cargarContratos() {
     });
   }
 
-  // Select filtro
-  filtroContrato.innerHTML = `<option value="">(Todos)</option>`;
-  contratos.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.nombre;
-    filtroContrato.appendChild(opt);
-  });
+  if (filtroContrato) {
+    filtroContrato.innerHTML = `<option value="">(Todos)</option>`;
+    contratos.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.nombre;
+      filtroContrato.appendChild(opt);
+    });
+  }
 }
 
 // =======================
-// Crear compromiso (solo si existe el form)
+// Crear compromiso
 // =======================
 if (form) {
   form.addEventListener("submit", async (e) => {
@@ -207,27 +204,28 @@ if (form) {
 }
 
 // =======================
-// Query filtros (nuevo filtro fecha)
+// Query filtros
 // =======================
 function buildQueryFromFilters() {
   const params = new URLSearchParams();
 
-  if (filtroContrato.value) params.set("contrato_id", filtroContrato.value);
+  if (filtroContrato?.value) params.set("contrato_id", filtroContrato.value);
 
-  // Estado múltiple
-  getSelectedEstados().forEach((e) => params.append("estado", e));
+  if (filtroEstado) {
+    getSelectedEstados().forEach((e) => params.append("estado", e));
+  }
 
-  const resp = filtroResponsable.value.trim();
+  const resp = filtroResponsable?.value?.trim() || "";
   if (resp) params.set("responsable", resp);
 
-  if (filtroAtrasado.value !== "") params.set("atrasado", filtroAtrasado.value);
+  if (filtroAtrasado && filtroAtrasado.value !== "") {
+    params.set("atrasado", filtroAtrasado.value);
+  }
 
-  // Filtro fecha único (sin desde/hasta)
-  // backend debe leer: date_field, date_mode, date_value
-  if (dateField.value && dateValue.value) {
+  if (dateField?.value && dateValue?.value) {
     params.set("date_field", dateField.value);
-    params.set("date_mode", dateMode.value);   // day | month
-    params.set("date_value", dateValue.value); // YYYY-MM-DD o YYYY-MM
+    params.set("date_mode", dateMode.value);
+    params.set("date_value", dateValue.value);
   }
 
   const qs = params.toString();
@@ -237,17 +235,17 @@ function buildQueryFromFilters() {
 // =======================
 // Export / Import
 // =======================
-btnExportar.addEventListener("click", () => {
+btnExportar?.addEventListener("click", () => {
   const query = buildQueryFromFilters();
   window.open(`${API}/compromisos/export${query}`, "_blank");
 });
 
-btnImportar.addEventListener("click", () => {
+btnImportar?.addEventListener("click", () => {
   fileImport.value = "";
   fileImport.click();
 });
 
-fileImport.addEventListener("change", async () => {
+fileImport?.addEventListener("change", async () => {
   const file = fileImport.files?.[0];
   if (!file) return;
 
@@ -262,10 +260,24 @@ fileImport.addEventListener("change", async () => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch(`${API}/compromisos/import`, { method: "POST", body: formData });
-    if (!res.ok) throw new Error(await res.text());
+    const res = await fetch(`${API}/compromisos/import`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      let msg = "Error importando archivo";
+      try {
+        const errJson = await res.json();
+        msg = errJson.error || JSON.stringify(errJson);
+      } catch {
+        msg = await res.text();
+      }
+      throw new Error(msg);
+    }
 
     const data = await res.json();
+
     alert(
       `✅ Importación finalizada\n\n` +
       `Compromisos insertados: ${data.inserted_compromisos}\n` +
@@ -273,7 +285,9 @@ fileImport.addEventListener("change", async () => {
       `Errores: ${data.errors_count}`
     );
 
-    if (data.errors_count) console.log("Errores import:", data.errors);
+    if (data.errors_count) {
+      console.log("Errores import:", data.errors);
+    }
 
     await cargarCompromisos(buildQueryFromFilters());
   } catch (err) {
@@ -293,7 +307,7 @@ function estadoBadge(estado) {
 }
 
 function evidenciaCell(c) {
-  const tiene = Number(c.tiene_evidencia ?? 0) === 1 || Boolean(c.evidencia);
+  const tiene = Number(c.tiene_evidencia ?? 0) === 1;
   if (!tiene) return `<span class="hint">Sin evidencia</span>`;
 
   return `
@@ -306,14 +320,14 @@ function evidenciaCell(c) {
 }
 
 async function cargarCompromisos(query = "") {
-  const compromisos = await apiGet("/compromisos" + query);
+  if (!tbody) return;
 
+  const compromisos = await apiGet("/compromisos" + query);
   tbody.innerHTML = "";
 
   compromisos.forEach((c) => {
     const tr = document.createElement("tr");
 
-    // Marca atrasados con un tono suave
     if (Number(c.atrasado) === 1) tr.classList.add("row-late");
 
     const obs = c.observacion_general || "";
@@ -360,42 +374,44 @@ async function cargarCompromisos(query = "") {
 // =======================
 // Filtros / Recargar
 // =======================
-btnFiltrar.addEventListener("click", async () => {
+btnFiltrar?.addEventListener("click", async () => {
   await cargarCompromisos(buildQueryFromFilters());
 });
 
-btnLimpiar.addEventListener("click", async () => {
-  filtroContrato.value = "";
-  filtroResponsable.value = "";
-  filtroAtrasado.value = "";
+btnLimpiar?.addEventListener("click", async () => {
+  if (filtroContrato) filtroContrato.value = "";
+  if (filtroResponsable) filtroResponsable.value = "";
+  if (filtroAtrasado) filtroAtrasado.value = "";
 
-  [...filtroEstado.options].forEach(o => (o.selected = false));
+  if (filtroEstado) {
+    [...filtroEstado.options].forEach(o => (o.selected = false));
+  }
 
-  dateField.value = "";
-  dateMode.value = "day";
-  syncDateInputType();
-  dateValue.value = "";
+  if (dateField) dateField.value = "";
+  if (dateMode) dateMode.value = "day";
+  if (dateMode && dateValue) syncDateInputType();
+  if (dateValue) dateValue.value = "";
 
   await cargarCompromisos("");
 });
 
-btnRecargar.addEventListener("click", () => {
+btnRecargar?.addEventListener("click", () => {
   cargarCompromisos(buildQueryFromFilters());
 });
 
 // =======================
 // Seleccionar todos
 // =======================
-chkTodos.addEventListener("change", () => {
+chkTodos?.addEventListener("change", () => {
   document.querySelectorAll(".chk-compromiso").forEach((c) => {
     c.checked = chkTodos.checked;
   });
 });
 
 // =======================
-// Eliminar seleccionados (bulk)
+// Eliminar seleccionados
 // =======================
-btnEliminarSeleccionados.addEventListener("click", async () => {
+btnEliminarSeleccionados?.addEventListener("click", async () => {
   const ids = [...document.querySelectorAll(".chk-compromiso:checked")]
     .map((x) => Number(x.dataset.id))
     .filter((n) => Number.isFinite(n));
@@ -406,7 +422,7 @@ btnEliminarSeleccionados.addEventListener("click", async () => {
   try {
     const res = await apiPost("/compromisos/delete-bulk", { ids });
     alert(`✅ Eliminados: ${res.deleted_count}`);
-    chkTodos.checked = false;
+    if (chkTodos) chkTodos.checked = false;
     await cargarCompromisos(buildQueryFromFilters());
   } catch (err) {
     console.error(err);
@@ -423,7 +439,7 @@ function abrirSelectorEvidencia(compromisoId) {
   fileEvidencia.click();
 }
 
-fileEvidencia.addEventListener("change", async () => {
+fileEvidencia?.addEventListener("change", async () => {
   const file = fileEvidencia.files?.[0];
   if (!file) return;
 
@@ -458,14 +474,13 @@ fileEvidencia.addEventListener("change", async () => {
 // =======================
 // Acciones tabla
 // =======================
-tbody.addEventListener("click", async (e) => {
+tbody?.addEventListener("click", async (e) => {
   const btn = e.target.closest("button");
   if (!btn) return;
 
   const id = Number(btn.dataset.id);
   const action = btn.dataset.action;
 
-  // Evidencia
   if (action === "evi_up") return abrirSelectorEvidencia(id);
   if (action === "evi_ver") return window.open(`${API}/compromisos/${id}/evidencia/view`, "_blank");
   if (action === "evi_down") return window.open(`${API}/compromisos/${id}/evidencia/download`, "_blank");
@@ -483,7 +498,6 @@ tbody.addEventListener("click", async (e) => {
     return;
   }
 
-  // CRUD
   if (action === "reprogramar") {
     selectedId = id;
     reprogInfo.textContent = `Compromiso ID: ${id}`;
@@ -555,7 +569,9 @@ tbody.addEventListener("click", async (e) => {
   }
 });
 
-// Modales: reprogramar / cerrar / observación
+// =======================
+// Modales
+// =======================
 btnCancelReprog?.addEventListener("click", () => dlgReprog.close());
 btnOkReprog?.addEventListener("click", async () => {
   const nueva_fecha = nuevaFechaInput.value;
