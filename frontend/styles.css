@@ -1,524 +1,607 @@
 /* ================================
    VARIABLES / BASE
 ================================ */
-:root{
-  /* Colores corporativos (logo Hesego) */
-  --brand1:#006E77;  /* teal oscuro */
-  --brand2:#00A6B4;  /* turquesa */
-  --brand3:#0ED2D2;  /* acento */
+:root {
+  --brand1: #0f4c81;
+  --brand2: #1a6db5;
+  --brand3: #3d9be9;
+  --brand-light: #e8f2fc;
 
-  --bg:#f4f7fb;
-  --card:#ffffff;
-  --text:#0f172a;
-  --muted:#64748b;
-  --line:#e5e7eb;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
 
-  --danger:#dc2626;
-  --danger2:#b91c1c;
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --danger: #dc2626;
+  --danger2: #b91c1c;
+  --danger-bg: #fee2e2;
+  --info: #2563eb;
+  --info-bg: #dbeafe;
 
-  --shadow: 0 10px 24px rgba(15,23,42,.08);
-  --radius:14px;
-
-  /* altura aproximada navbar (para sticky header en tabla) */
-  --topbar-h: 76px;
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.07), 0 1px 2px rgba(15,23,42,.05);
+  --shadow: 0 4px 16px rgba(15,23,42,.09), 0 1px 4px rgba(15,23,42,.05);
+  --shadow-lg: 0 10px 30px rgba(15,23,42,.12);
+  --radius: 12px;
+  --topbar-h: 68px;
 }
 
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{
-  margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color:var(--text);
-  background:var(--bg);
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  overflow-x: hidden;
 }
-
-/* Evita scroll horizontal por elementos que se desbordan */
-body{ overflow-x:hidden; }
 
 /* ================================
-   NAVBAR / TOPBAR (FULL WIDTH FIX)
+   TOPBAR
 ================================ */
-/*
-  PROBLEMA: tu navbar se ve hasta “la mitad” cuando el <header>
-  quedó dentro de un contenedor con max-width o dentro del grid .layout.
-
-  FIX robusto:
-  - width: 100vw
-  - “saca” el header del centrado usando margin-left calc(50% - 50vw)
-*/
-.topbar{
+.topbar {
   position: sticky;
   top: 0;
   z-index: 1000;
-
-  /* FULL WIDTH A PRUEBA DE CONTENEDORES */
   width: 100vw;
   margin-left: calc(50% - 50vw);
-
-  color:#fff;
-  background: linear-gradient(90deg, var(--brand1), var(--brand2));
-  padding:14px 18px;
-
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-
-  box-shadow: 0 10px 20px rgba(0,0,0,.08);
+  background: linear-gradient(100deg, var(--brand1) 0%, var(--brand2) 60%, var(--brand3) 100%);
+  color: #fff;
+  padding: 0 20px;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 2px 12px rgba(15,23,42,.18);
 }
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width: 240px;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.brand__logo{
-  width:44px;
-  height:44px;
-  border-radius:12px;
-  object-fit:contain;
-  background:#fff;
-  border:1px solid rgba(255,255,255,.35);
+.brand__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #fff;
+  padding: 3px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.3);
 }
 
-.brand__title{
-  font-weight:900;
-  letter-spacing:.3px;
-  line-height: 1.05;
-}
-.brand__subtitle{
-  font-size:12px;
-  opacity:.92;
-  margin-top:2px;
+.brand__title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 1.1;
 }
 
-.topnav{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap: wrap; /* para que no se rompa en pantallas pequeñas */
+.brand__subtitle {
+  font-size: 11px;
+  opacity: .8;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   justify-content: flex-end;
 }
 
-.navlink{
-  color:#fff;
-  text-decoration:none;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.25);
-  background: rgba(255,255,255,.08);
-  font-weight:800;
+.navlink {
+  color: rgba(255,255,255,.9);
+  text-decoration: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.1);
+  font-weight: 600;
+  font-size: 13px;
+  transition: background .15s;
   white-space: nowrap;
 }
+.navlink:hover { background: rgba(255,255,255,.18); }
+.navlink--active { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.35); }
 
-.navlink:hover{ background: rgba(255,255,255,.14); }
+/* ================================
+   KPI / STATS BAR
+================================ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  padding: 16px 18px 0;
+}
 
-.navlink--active{
-  background: rgba(255,255,255,.22);
-  border-color: rgba(255,255,255,.35);
+@media (max-width: 900px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 560px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-left: 4px solid var(--brand2);
+}
+
+.kpi-card--pendiente  { border-left-color: var(--warning); }
+.kpi-card--reprog     { border-left-color: var(--info); }
+.kpi-card--cerrado    { border-left-color: var(--success); }
+.kpi-card--atrasado   { border-left-color: var(--danger); }
+.kpi-card--total      { border-left-color: var(--brand2); }
+
+.kpi-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text);
+}
+
+.kpi-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-top: 2px;
 }
 
 /* ================================
-   LAYOUT GENERAL
+   LAYOUT
 ================================ */
-.layout{
-  display:grid;
-  grid-template-columns: 360px 1fr;
-  gap:16px;
-  padding:16px 18px 22px;
-
-  /* importantísimo: evita que los hijos “empujen” el grid */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 14px;
+  padding: 14px 18px 24px;
   min-width: 0;
 }
 
-@media (max-width: 1100px){
-  .layout{ grid-template-columns: 1fr; }
+@media (max-width: 1050px) {
+  .layout { grid-template-columns: 1fr; }
 }
 
-.sidebar{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   min-width: 0;
 }
 
-.panel, .card{
-  background:var(--card);
-  border:1px solid var(--line);
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ================================
+   CARDS / PANELS
+================================ */
+.panel, .card {
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
-.panel{ padding:14px; }
-.card{ padding:14px; }
+.panel { padding: 14px 16px; }
+.card  { padding: 14px 16px; }
 
-.panel__title{
-  font-weight:900;
-  font-size:14px;
-  margin-bottom:10px;
+.panel__title {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--brand1);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
 }
 
-.panel__subtitle{
-  margin-top:12px;
-  font-size:12px;
-  color:var(--muted);
-  font-weight:800;
+.panel__subtitle {
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
 }
 
-.main{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  min-width: 0;
-}
+.card__header { margin-bottom: 14px; }
 
-.card__header{ margin-bottom:12px; }
-
-.card__header--row{
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
-  gap:12px;
+.card__header--row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.card h2{
-  margin:0;
-  font-size:18px;
+.card h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--brand1);
 }
 
-.card__subtitle{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:4px;
+.card__subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 3px;
 }
 
 /* ================================
-   FORMULARIOS / CAMPOS
+   FORMULARIOS
 ================================ */
-.field label{
-  display:block;
-  font-size:12px;
-  color:var(--muted);
-  margin-bottom:6px;
+.field { margin-bottom: 2px; }
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 5px;
 }
 
 .field input,
 .field select,
-.field textarea{
-  width:100%;
-  padding:10px 10px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:#fff;
-  outline:none;
+.field textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  outline: none;
+  font-size: 13px;
+  color: var(--text);
+  transition: border-color .15s, box-shadow .15s;
 }
 
-.field textarea{
-  resize: vertical;
-  min-height: 140px; /* un poco más grande como pediste */
-}
+.field textarea { resize: vertical; min-height: 120px; }
 
 .field input:focus,
 .field select:focus,
-.field textarea:focus{
-  border-color: rgba(0, 166, 180, .65);
-  box-shadow: 0 0 0 4px rgba(0, 166, 180, .14);
+.field textarea:focus {
+  border-color: var(--brand3);
+  box-shadow: 0 0 0 3px rgba(61,155,233,.15);
 }
 
-.hint{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:6px;
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
 }
 
-.grid2{
-  display:grid;
+.grid2 {
+  display: grid;
   grid-template-columns: 1fr 1fr;
-  gap:10px;
+  gap: 12px;
   min-width: 0;
 }
 
-.grid3{
-  display:grid;
+.grid3 {
+  display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap:10px;
+  gap: 10px;
   min-width: 0;
 }
 
-@media (max-width: 720px){
-  .grid2, .grid3{ grid-template-columns: 1fr; }
+@media (max-width: 720px) {
+  .grid2, .grid3 { grid-template-columns: 1fr; }
 }
 
-.form{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.form__row{
-  display:grid;
+.form__row {
+  display: grid;
   grid-template-columns: 1.2fr 1fr .8fr;
-  gap:12px;
+  gap: 12px;
   min-width: 0;
 }
 
-.form__row--2col{
-  grid-template-columns: 1fr 1fr;
+.form__row--2col { grid-template-columns: 1fr 1fr; }
+
+@media (max-width: 900px) {
+  .form__row, .form__row--2col { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 900px){
-  .form__row, .form__row--2col{ grid-template-columns: 1fr; }
-}
-
-.form__actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
+.form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 /* ================================
    BOTONES
 ================================ */
-.btn{
-  border:1px solid var(--line);
-  background:#fff;
-  padding:10px 12px;
-  border-radius:12px;
-  cursor:pointer;
-  font-weight:800;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 9px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
   line-height: 1;
-}
-
-.btn--primary{
-  background: var(--brand2);
-  border-color: var(--brand1);
-  color:#fff;
-}
-.btn--primary:hover{ filter: brightness(.95); }
-
-.btn--ghost{
-  background: rgba(255,255,255,.10);
-  color:#fff;
-  border-color: rgba(255,255,255,.25);
-}
-.btn--ghost:hover{ background: rgba(255,255,255,.16); }
-
-.btnrow{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-  flex-wrap: wrap;
-}
-
-.btncol{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-/* FIX: en panel de “Acciones” evita que el botón se vea gigante raro */
-.panel .btncol .btn{
-  width: 100%;
-  max-width: 100%;
-  padding: 12px 14px;
-}
-
-/* Botón danger */
-.btn--danger{
-  background: var(--danger);
-  border-color: var(--danger2);
-  color:#fff;
-}
-.btn--danger:hover{ background: var(--danger2); }
-
-/* ================================
-   BOTONES DE ICONO (ACCIONES TABLA)
-================================ */
-.iconbtn{
-  width:38px;
-  height:38px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:#fff;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-
-  /* evita deformaciones */
-  flex: 0 0 auto;
-}
-
-.iconbtn:hover{ background:#f3f4f6; }
-
-/* ================================
-   TABLA + SCROLL
-================================ */
-.tableWrap{
-  overflow:auto;              /* scroll horizontal */
-  border-radius: 12px;
-  border:1px solid var(--line);
-  background:#fff;
-
-  /* evita que se salga del grid */
-  min-width: 0;
-}
-
-/* alto fijo + scroll vertical interno */
-.tableWrap--fixed{
-  max-height: 560px;          /* ajusta a gusto */
-  overflow: auto;
-}
-
-/* tabla */
-.table{
-  width:100%;
-  border-collapse: collapse;
-  min-width: 980px; /* si hay muchas columnas, activa scroll horizontal */
-  background:#fff;
-}
-
-.table th{
-  position: sticky;
-  top: 0; /* header de tabla sticky */
-  background:#f9fbff;
-  text-align:left;
-  font-size:12px;
-  color:var(--muted);
-  padding:12px;
-  border-bottom:1px solid var(--line);
-  z-index: 2;
-}
-
-.table td{
-  padding:12px;
-  border-bottom:1px solid var(--line);
-  vertical-align: top;
-}
-
-/* columnas */
-.col-check{ width: 52px; }
-.col-actions{ width: 140px; } /* más compacto */
-.col-evidencia{ width: 140px; }
-
-/* Badges estados */
-.badge{
-  display:inline-flex;
-  align-items:center;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
+  transition: background .15s, filter .15s;
   white-space: nowrap;
 }
-.badge--pendiente{ background:#fff3b0; }
-.badge--reprog{ background:#dbeafe; }
-.badge--cerrado{ background:#dcfce7; }
 
-/* ✅ ATRASADO: más sutil (o bórralo si no lo quieres) */
-.row-late{ background:#fff7f7; }
+.btn--primary {
+  background: var(--brand2);
+  border-color: var(--brand1);
+  color: #fff;
+}
+.btn--primary:hover { filter: brightness(.93); }
 
-/* Acciones: ahora quedan ordenadas en fila (iconos) */
-.actions{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  justify-content:flex-start;
-  flex-wrap: wrap;
+.btn--danger {
+  background: var(--danger);
+  border-color: var(--danger2);
+  color: #fff;
 }
+.btn--danger:hover { background: var(--danger2); }
 
-/* checkbox seleccionar todos */
-.checkAll{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  font-size:12px;
-  color:var(--muted);
+.btn--ghost {
+  background: #f1f5f9;
+  color: var(--text);
+  border-color: var(--line);
 }
+.btn--ghost:hover { background: #e2e8f0; }
 
-/* ================================
-   DIALOGS / MODALES
-================================ */
-.dlg{
-  border: none;
-  border-radius: 16px;
-  padding: 0;
-  width: min(720px, 92vw);
-  box-shadow: var(--shadow);
+/* ghost en topbar = blanco */
+.topbar .btn--ghost {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border-color: rgba(255,255,255,.22);
 }
-.dlg--wide{ width: min(980px, 94vw); }
-.dlg::backdrop{ background: rgba(15, 23, 42, .35); }
+.topbar .btn--ghost:hover { background: rgba(255,255,255,.2); }
 
-.dlg__head{
-  padding: 14px;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#fff;
-  border-radius:16px 16px 0 0;
-}
-.dlg__title{ font-weight:900; }
-.dlg__body{
-  padding: 14px;
-  background:#fff;
-  border-radius:0 0 16px 16px;
-}
-.dlg__actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
+.btnrow {
+  display: flex;
+  gap: 10px;
   margin-top: 12px;
   flex-wrap: wrap;
 }
 
-/* =========================================
-   FIX: btn--ghost SOLO para TOPBAR (navbar)
-   y crear un estilo visible para paneles
-========================================= */
-
-/* 1) btn--ghost dentro del navbar: OK (blanco) */
-.topbar .btn--ghost,
-.topbar .navlink.btn--ghost{
-  background: rgba(255,255,255,.10);
-  color:#fff;
-  border-color: rgba(255,255,255,.25);
+.btncol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.topbar .btn--ghost:hover,
-.topbar .navlink.btn--ghost:hover{
-  background: rgba(255,255,255,.16);
-}
-
-/* 2) btn--ghost fuera del navbar (paneles/cards): visible */
-body .btn--ghost{
-  background: #f1f5f9;         /* gris claro */
-  color: var(--text);          /* texto oscuro */
-  border-color: var(--line);
-}
-
-body .btn--ghost:hover{
-  background: #e9eff6;
-}
-
-/* 3) Para que los botones en el panel "Acciones" siempre llenen el ancho */
-.panel .btncol .btn{
+.panel .btncol .btn {
   width: 100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:14px 14px;
-  border-radius:14px;
-  white-space: nowrap;
+  padding: 11px 14px;
+  border-radius: 9px;
 }
 
-/* 4) (Opcional) mejorar el multi-select del estado */
-#filtro_estado[multiple]{
-  min-height: 110px;
+/* ================================
+   BOTONES ICONO
+================================ */
+.iconbtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 14px;
+  transition: background .12s;
 }
+.iconbtn:hover { background: #f1f5f9; }
+.iconbtn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ================================
+   TABLA
+================================ */
+.tableWrap {
+  overflow: auto;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  min-width: 0;
+}
+
+.tableWrap--fixed {
+  max-height: 580px;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+  background: #fff;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--brand1);
+  color: #fff;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding: 11px 12px;
+  border-bottom: 2px solid var(--brand2);
+}
+
+.table tbody tr { transition: background .1s; }
+.table tbody tr:hover { background: #f8fafd; }
+.table tbody tr:nth-child(even) { background: #fafbfd; }
+.table tbody tr:nth-child(even):hover { background: #f1f5f9; }
+
+.table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.col-check   { width: 46px; }
+.col-actions { width: 160px; }
+
+/* ================================
+   BADGES
+================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: .2px;
+}
+
+.badge--pendiente {
+  background: var(--warning-bg);
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.badge--reprog {
+  background: var(--info-bg);
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.badge--cerrado {
+  background: var(--success-bg);
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+/* Fila atrasada */
+.row-late td:first-child {
+  border-left: 3px solid var(--danger);
+}
+.row-late { background: #fff5f5 !important; }
+.row-late:hover { background: #fee2e2 !important; }
+
+/* ================================
+   ACCIONES TABLA
+================================ */
+.actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.checkAll {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ================================
+   MODALES
+================================ */
+.dlg {
+  border: none;
+  border-radius: 14px;
+  padding: 0;
+  width: min(680px, 94vw);
+  box-shadow: var(--shadow-lg);
+}
+
+.dlg--wide { width: min(900px, 96vw); }
+
+.dlg::backdrop { background: rgba(15,23,42,.45); }
+
+.dlg__head {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--brand1);
+  border-radius: 14px 14px 0 0;
+}
+
+.dlg__title {
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+}
+
+.dlg__head .iconbtn {
+  background: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.2);
+  color: #fff;
+}
+.dlg__head .iconbtn:hover { background: rgba(255,255,255,.25); }
+
+.dlg__body {
+  padding: 18px;
+  background: #fff;
+  border-radius: 0 0 14px 14px;
+}
+
+.dlg__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* Aviso de requisito en modal cerrar */
+.dlg-warning {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #fcd34d;
+  background: #fef9ec;
+  color: #78350f;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+/* filtro multi-select */
+#filtro_estado[multiple] { min-height: 100px; }

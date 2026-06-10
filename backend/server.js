@@ -454,6 +454,32 @@ app.get("/compromisos", async (req, res) => {
 });
 
 // =========================================================
+//  COMPROMISOS - ESTADÍSTICAS
+// =========================================================
+
+/**
+ * GET /compromisos/stats
+ * Totales por estado + atrasados para el dashboard KPI
+ */
+app.get("/compromisos/stats", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        COUNT(*)                                                    AS total,
+        SUM(estado = 'Pendiente')                                   AS pendiente,
+        SUM(estado = 'Reprogramado')                                AS reprogramado,
+        SUM(estado = 'Cerrado')                                     AS cerrado,
+        SUM(estado <> 'Cerrado' AND fecha_entrega < CURDATE())      AS atrasado
+      FROM compromisos
+    `);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Error GET /compromisos/stats:", err);
+    res.status(500).json({ error: "Error consultando estadísticas" });
+  }
+});
+
+// =========================================================
 //  COMPROMISOS - CREAR
 // =========================================================
 

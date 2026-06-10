@@ -32,6 +32,30 @@
   <!-- =======================
        LAYOUT
   ======================== -->
+  <!-- KPI Stats -->
+  <div class="kpi-row">
+    <div class="kpi-card kpi-card--total">
+      <div class="kpi-icon">📋</div>
+      <div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-label">Total</div></div>
+    </div>
+    <div class="kpi-card kpi-card--pendiente">
+      <div class="kpi-icon">⏳</div>
+      <div><div class="kpi-value" id="kpi-pendiente">—</div><div class="kpi-label">Pendientes</div></div>
+    </div>
+    <div class="kpi-card kpi-card--reprog">
+      <div class="kpi-icon">📅</div>
+      <div><div class="kpi-value" id="kpi-reprog">—</div><div class="kpi-label">Reprogramados</div></div>
+    </div>
+    <div class="kpi-card kpi-card--cerrado">
+      <div class="kpi-icon">✅</div>
+      <div><div class="kpi-value" id="kpi-cerrado">—</div><div class="kpi-label">Cerrados</div></div>
+    </div>
+    <div class="kpi-card kpi-card--atrasado">
+      <div class="kpi-icon">⚠️</div>
+      <div><div class="kpi-value" id="kpi-atrasado">—</div><div class="kpi-label">Atrasados</div></div>
+    </div>
+  </div>
+
   <div class="layout">
     <!-- ===== Sidebar ===== -->
     <aside class="sidebar">
@@ -224,19 +248,32 @@
     </div>
   </dialog>
 
-  <dialog id="dlg-cerrar" class="dlg">
+  <dialog id="dlg-cerrar" class="dlg dlg--wide">
     <div class="dlg__head">
       <div class="dlg__title">Cerrar compromiso</div>
       <button class="iconbtn" id="btn-cancel-cerrar" type="button" title="Cerrar">✕</button>
     </div>
     <div class="dlg__body">
       <div id="cerrar-info" class="hint"></div>
-      <div class="field" style="margin-top:10px;">
+      <div class="dlg-warning">
+        ⚠️ Para cerrar debe subir una <strong>evidencia</strong> o escribir una <strong>observación</strong>.
+      </div>
+      <div class="field">
         <label for="fecha_entrega_compromiso">Fecha entrega real</label>
         <input id="fecha_entrega_compromiso" type="date" />
       </div>
+      <div style="margin-top:14px;">
+        <div style="font-weight:700; font-size:13px; margin-bottom:6px; color:var(--brand1);">Evidencia</div>
+        <div id="cerrar-evi-status" class="hint" style="margin-bottom:6px;">Verificando...</div>
+        <button class="btn btn--ghost" id="btn-cerrar-evi-up" type="button">⬆ Subir evidencia</button>
+        <input id="file-cerrar-evidencia" type="file" accept="image/*" style="display:none" />
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label for="cerrar-obs-texto">Observación de cierre</label>
+        <textarea id="cerrar-obs-texto" rows="3" placeholder="Escribe una observación de cierre..."></textarea>
+      </div>
       <div class="dlg__actions">
-        <button id="btn-ok-cerrar" class="btn btn--primary" type="button">Cerrar</button>
+        <button id="btn-ok-cerrar" class="btn btn--primary" type="button">Cerrar compromiso</button>
       </div>
     </div>
   </dialog>

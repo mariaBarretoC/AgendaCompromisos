@@ -52,6 +52,10 @@ const btnOkReprog = document.getElementById("btn-ok-reprog");
 const dlgCerrar = document.getElementById("dlg-cerrar");
 const cerrarInfo = document.getElementById("cerrar-info");
 const fechaEntregaCompromisoInput = document.getElementById("fecha_entrega_compromiso");
+const cerrarEviStatus = document.getElementById("cerrar-evi-status");
+const btnCerrarEviUp = document.getElementById("btn-cerrar-evi-up");
+const fileCerrarEvidencia = document.getElementById("file-cerrar-evidencia");
+const cerrarObsTexto = document.getElementById("cerrar-obs-texto");
 const btnCancelCerrar = document.getElementById("btn-cancel-cerrar");
 const btnOkCerrar = document.getElementById("btn-ok-cerrar");
 
@@ -74,6 +78,7 @@ let selectedEvidenciaCompId = null;
 // Estado
 let selectedId = null;
 let selectedObsActual = "";
+let cerrarTieneEvidencia = false;
 
 // =======================
 // Helpers
@@ -510,7 +515,19 @@ tbody?.addEventListener("click", async (e) => {
     selectedId = id;
     cerrarInfo.textContent = `Compromiso ID: ${id}`;
     fechaEntregaCompromisoInput.value = "";
+    cerrarObsTexto.value = "";
+    cerrarTieneEvidencia = false;
+    cerrarEviStatus.textContent = "Verificando...";
     dlgCerrar.showModal();
+
+    try {
+      await apiGet(`/compromisos/${id}/evidencia`);
+      cerrarTieneEvidencia = true;
+      cerrarEviStatus.innerHTML = `<span style="color:var(--success);">✓ Evidencia cargada</span>`;
+    } catch {
+      cerrarTieneEvidencia = false;
+      cerrarEviStatus.innerHTML = `<span style="color:var(--danger);">Sin evidencia</span>`;
+    }
     return;
   }
 
@@ -588,15 +605,45 @@ btnOkReprog?.addEventListener("click", async () => {
   }
 });
 
+// Upload de evidencia desde el modal de cierre
+btnCerrarEviUp?.addEventListener("click", () => {
+  fileCerrarEvidencia.value = "";
+  fileCerrarEvidencia.click();
+});
+
+fileCerrarEvidencia?.addEventListener("change", async () => {
+  const file = fileCerrarEvidencia.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { alert("❌ Debe ser una imagen."); return; }
+  try {
+    cerrarEviStatus.textContent = "Subiendo...";
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API}/compromisos/${selectedId}/evidencia`, { method: "POST", body: formData });
+    if (!res.ok) throw new Error(await res.text());
+    cerrarTieneEvidencia = true;
+    cerrarEviStatus.innerHTML = `<span style="color:var(--success);">✓ Evidencia cargada</span>`;
+  } catch (err) {
+    cerrarEviStatus.innerHTML = `<span style="color:var(--danger);">Sin evidencia</span>`;
+    alert("❌ Error subiendo evidencia: " + err.message);
+  }
+});
+
 btnCancelCerrar?.addEventListener("click", () => dlgCerrar.close());
 btnOkCerrar?.addEventListener("click", async () => {
   const fecha_entrega_compromiso = fechaEntregaCompromisoInput.value;
   if (!fecha_entrega_compromiso) return alert("Selecciona la fecha de entrega real");
 
+  const observacion = cerrarObsTexto.value.trim();
+  if (!cerrarTieneEvidencia && !observacion) {
+    return alert("Debe subir una evidencia o escribir una observación para cerrar el compromiso.");
+  }
+
   try {
-    await apiPost(`/compromisos/${selectedId}/cerrar`, { fecha_entrega_compromiso });
+    await apiPost(`/compromisos/${selectedId}/cerrar`, { fecha_entrega_compromiso, observacion });
     dlgCerrar.close();
     await cargarCompromisos(buildQueryFromFilters());
+    await cargarStats();
     alert("✅ Cerrado");
   } catch (err) {
     console.error(err);
@@ -626,12 +673,27 @@ btnGuardarObs?.addEventListener("click", async () => {
 });
 
 // =======================
+// Stats / KPI
+// =======================
+async function cargarStats() {
+  try {
+    const s = await apiGet("/compromisos/stats");
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? 0; };
+    set("kpi-total",     s.total);
+    set("kpi-pendiente", s.pendiente);
+    set("kpi-reprog",    s.reprogramado);
+    set("kpi-cerrado",   s.cerrado);
+    set("kpi-atrasado",  s.atrasado);
+  } catch { /* silencioso si la página no tiene KPIs */ }
+}
+
+// =======================
 // Init
 // =======================
 (async function init() {
   try {
     await cargarContratos();
-    await cargarCompromisos("");
+    await Promise.all([cargarCompromisos(""), cargarStats()]);
   } catch (err) {
     console.error(err);
     alert("❌ No se pudo cargar la app. Revisa que el backend esté corriendo.");
