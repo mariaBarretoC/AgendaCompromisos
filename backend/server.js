@@ -463,15 +463,25 @@ app.get("/compromisos", async (req, res) => {
  */
 app.get("/compromisos/stats", async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const built = buildFilters(req.query);
+    if (built.error) return res.status(400).json({ error: built.error });
+
+    const { where, params } = built;
+    const whereSQL = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    const sql = `
       SELECT
-        COUNT(*)                                                    AS total,
-        SUM(estado = 'Pendiente')                                   AS pendiente,
-        SUM(estado = 'Reprogramado')                                AS reprogramado,
-        SUM(estado = 'Cerrado')                                     AS cerrado,
-        SUM(estado <> 'Cerrado' AND fecha_entrega < CURDATE())      AS atrasado
-      FROM compromisos
-    `);
+        COUNT(*)                                                         AS total,
+        SUM(c.estado = 'Pendiente')                                      AS pendiente,
+        SUM(c.estado = 'Reprogramado')                                   AS reprogramado,
+        SUM(c.estado = 'Cerrado')                                        AS cerrado,
+        SUM(c.estado <> 'Cerrado' AND c.fecha_entrega < CURDATE())       AS atrasado
+      FROM compromisos c
+      LEFT JOIN contratos ct ON ct.id = c.contrato_id
+      ${whereSQL}
+    `;
+
+    const [rows] = await pool.query(sql, params);
     res.json(rows[0]);
   } catch (err) {
     console.error("Error GET /compromisos/stats:", err);

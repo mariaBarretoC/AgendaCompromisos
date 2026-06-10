@@ -2,10 +2,11 @@
    VARIABLES / BASE
 ================================ */
 :root {
-  --brand1: #0f4c81;
-  --brand2: #1a6db5;
-  --brand3: #3d9be9;
-  --brand-light: #e8f2fc;
+  /* Colores corporativos Hesego — teal/turquesa del logo */
+  --brand1: #006272;   /* teal oscuro — "HESEGO" */
+  --brand2: #00929E;   /* teal medio */
+  --brand3: #00C4CC;   /* turquesa brillante — icono del logo */
+  --brand-light: #e0f7f8;
 
   --bg: #f0f4f8;
   --card: #ffffff;

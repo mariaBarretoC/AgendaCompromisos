@@ -260,7 +260,8 @@ btnExportar.addEventListener("click", () => {
 dateMode.addEventListener("change", syncDateInputType);
 
 btnFiltrar.addEventListener("click", async () => {
-  await Promise.all([cargarCompromisos(buildQueryFromFilters()), cargarStats()]);
+  const q = buildQueryFromFilters();
+  await Promise.all([cargarCompromisos(q), cargarStats(q)]);
 });
 
 btnLimpiar.addEventListener("click", async () => {
@@ -278,7 +279,8 @@ btnLimpiar.addEventListener("click", async () => {
 });
 
 btnRecargar.addEventListener("click", () => {
-  Promise.all([cargarCompromisos(buildQueryFromFilters()), cargarStats()]);
+  const q = buildQueryFromFilters();
+  Promise.all([cargarCompromisos(q), cargarStats(q)]);
 });
 
 // =======================
@@ -532,7 +534,8 @@ btnOkCerrar.addEventListener("click", async () => {
   try {
     await apiPost(`/compromisos/${selectedId}/cerrar`, { fecha_entrega_compromiso, observacion });
     dlgCerrar.close();
-    await Promise.all([cargarCompromisos(buildQueryFromFilters()), cargarStats()]);
+    const q = buildQueryFromFilters();
+    await Promise.all([cargarCompromisos(q), cargarStats(q)]);
     alert("✅ Cerrado");
   } catch (err) {
     console.error(err);
@@ -564,16 +567,16 @@ btnGuardarObs.addEventListener("click", async () => {
 // =======================
 // Stats / KPI
 // =======================
-async function cargarStats() {
+async function cargarStats(query = "") {
   try {
-    const s = await apiGet("/compromisos/stats");
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? 0; };
+    const s = await apiGet("/compromisos/stats" + query);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = Number(val ?? 0); };
     set("kpi-total",     s.total);
     set("kpi-pendiente", s.pendiente);
     set("kpi-reprog",    s.reprogramado);
     set("kpi-cerrado",   s.cerrado);
     set("kpi-atrasado",  s.atrasado);
-  } catch { /* silencioso */ }
+  } catch (e) { console.error("Stats error:", e.message); }
 }
 
 // =======================
@@ -583,7 +586,7 @@ async function cargarStats() {
   try {
     syncDateInputType();
     await cargarContratos();
-    await Promise.all([cargarCompromisos(""), cargarStats()]);
+    await Promise.all([cargarCompromisos(""), cargarStats("")]);
   } catch (err) {
     console.error(err);
     alert("❌ No se pudo cargar la página de compromisos.");
