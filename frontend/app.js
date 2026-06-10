@@ -324,10 +324,20 @@ function evidenciaCell(c) {
   `;
 }
 
+function actualizarKPIs(lista) {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set("kpi-total",     lista.length);
+  set("kpi-pendiente", lista.filter(c => c.estado === "Pendiente").length);
+  set("kpi-reprog",    lista.filter(c => c.estado === "Reprogramado").length);
+  set("kpi-cerrado",   lista.filter(c => c.estado === "Cerrado").length);
+  set("kpi-atrasado",  lista.filter(c => Number(c.atrasado) === 1).length);
+}
+
 async function cargarCompromisos(query = "") {
   if (!tbody) return;
 
   const compromisos = await apiGet("/compromisos" + query);
+  actualizarKPIs(compromisos);
   tbody.innerHTML = "";
 
   compromisos.forEach((c) => {
