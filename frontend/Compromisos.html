@@ -164,7 +164,7 @@
   </dialog>
 
   <!-- Modal Cerrar -->
-  <dialog id="dlg-cerrar" class="dlg">
+  <dialog id="dlg-cerrar" class="dlg dlg--wide">
     <div class="dlg__head">
       <div class="dlg__title">Cerrar compromiso</div>
       <button class="iconbtn" id="btn-cancel-cerrar" type="button">✕</button>
@@ -172,13 +172,29 @@
     <div class="dlg__body">
       <div id="cerrar-info" class="hint"></div>
 
-      <div class="field" style="margin-top:10px;">
+      <div style="margin-top:8px; padding:8px 12px; border-radius:6px; border:1px solid #fde68a; background:#fef3c7; color:#92400e; font-size:0.85rem;">
+        ⚠️ Para cerrar el compromiso debe subir una <strong>evidencia</strong> o escribir una <strong>observación</strong>.
+      </div>
+
+      <div class="field" style="margin-top:12px;">
         <label for="fecha_entrega_compromiso">Fecha entrega real</label>
         <input id="fecha_entrega_compromiso" type="date" />
       </div>
 
+      <div style="margin-top:12px;">
+        <div style="font-weight:600; margin-bottom:6px;">Evidencia</div>
+        <div id="cerrar-evi-status" class="hint" style="margin-bottom:6px;">Verificando...</div>
+        <button class="btn btn--ghost" id="btn-cerrar-evi-up" type="button">⬆ Subir evidencia</button>
+        <input id="file-cerrar-evidencia" type="file" accept="image/*" style="display:none" />
+      </div>
+
+      <div class="field" style="margin-top:12px;">
+        <label for="cerrar-obs-texto">Observación de cierre</label>
+        <textarea id="cerrar-obs-texto" rows="4" placeholder="Escribe una observación de cierre..."></textarea>
+      </div>
+
       <div class="dlg__actions">
-        <button id="btn-ok-cerrar" class="btn btn--primary" type="button">Cerrar</button>
+        <button id="btn-ok-cerrar" class="btn btn--primary" type="button">Cerrar compromiso</button>
       </div>
     </div>
   </dialog>

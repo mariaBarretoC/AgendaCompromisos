@@ -45,6 +45,10 @@ const btnOkReprog = document.getElementById("btn-ok-reprog");
 const dlgCerrar = document.getElementById("dlg-cerrar");
 const cerrarInfo = document.getElementById("cerrar-info");
 const fechaEntregaCompromisoInput = document.getElementById("fecha_entrega_compromiso");
+const cerrarEviStatus = document.getElementById("cerrar-evi-status");
+const btnCerrarEviUp = document.getElementById("btn-cerrar-evi-up");
+const fileCerrarEvidencia = document.getElementById("file-cerrar-evidencia");
+const cerrarObsTexto = document.getElementById("cerrar-obs-texto");
 const btnCancelCerrar = document.getElementById("btn-cancel-cerrar");
 const btnOkCerrar = document.getElementById("btn-ok-cerrar");
 
@@ -68,6 +72,7 @@ const fileEvidencia = document.getElementById("file-evidencia");
 let selectedId = null;
 let selectedObsActual = "";
 let selectedEvidenciaCompId = null;
+let cerrarTieneEvidencia = false;
 
 // =======================
 // Helpers
@@ -348,6 +353,42 @@ fileEvidencia.addEventListener("change", async () => {
   }
 });
 
+// Upload de evidencia desde el modal de cierre
+btnCerrarEviUp.addEventListener("click", () => {
+  fileCerrarEvidencia.value = "";
+  fileCerrarEvidencia.click();
+});
+
+fileCerrarEvidencia.addEventListener("change", async () => {
+  const file = fileCerrarEvidencia.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("❌ Debe ser una imagen.");
+    return;
+  }
+
+  try {
+    cerrarEviStatus.textContent = "Subiendo...";
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${API}/compromisos/${selectedId}/evidencia`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    cerrarTieneEvidencia = true;
+    cerrarEviStatus.innerHTML = `<span style="color:#16a34a;">✓ Evidencia cargada</span>`;
+  } catch (err) {
+    console.error(err);
+    cerrarEviStatus.innerHTML = `<span style="color:#dc2626;">Sin evidencia</span>`;
+    alert("❌ Error subiendo evidencia: " + err.message);
+  }
+});
+
 // =======================
 // Acciones de tabla
 // =======================
@@ -387,7 +428,19 @@ tbody.addEventListener("click", async (e) => {
     selectedId = id;
     cerrarInfo.textContent = `Compromiso ID: ${id}`;
     fechaEntregaCompromisoInput.value = "";
+    cerrarObsTexto.value = "";
+    cerrarTieneEvidencia = false;
+    cerrarEviStatus.textContent = "Verificando...";
     dlgCerrar.showModal();
+
+    try {
+      await apiGet(`/compromisos/${id}/evidencia`);
+      cerrarTieneEvidencia = true;
+      cerrarEviStatus.innerHTML = `<span style="color:#16a34a;">✓ Evidencia cargada</span>`;
+    } catch {
+      cerrarTieneEvidencia = false;
+      cerrarEviStatus.innerHTML = `<span style="color:#dc2626;">Sin evidencia</span>`;
+    }
     return;
   }
 
@@ -470,8 +523,14 @@ btnOkCerrar.addEventListener("click", async () => {
   const fecha_entrega_compromiso = fechaEntregaCompromisoInput.value;
   if (!fecha_entrega_compromiso) return alert("Selecciona la fecha de entrega real");
 
+  const observacion = cerrarObsTexto.value.trim();
+
+  if (!cerrarTieneEvidencia && !observacion) {
+    return alert("Debe subir una evidencia o escribir una observación para cerrar el compromiso.");
+  }
+
   try {
-    await apiPost(`/compromisos/${selectedId}/cerrar`, { fecha_entrega_compromiso });
+    await apiPost(`/compromisos/${selectedId}/cerrar`, { fecha_entrega_compromiso, observacion });
     dlgCerrar.close();
     await cargarCompromisos(buildQueryFromFilters());
     alert("✅ Cerrado");

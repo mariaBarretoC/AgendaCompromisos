@@ -612,7 +612,7 @@ app.post("/compromisos/:id/reprogramar", async (req, res) => {
 app.post("/compromisos/:id/cerrar", async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { fecha_entrega_compromiso } = req.body;
+    const { fecha_entrega_compromiso, observacion } = req.body;
 
     if (!id || !fecha_entrega_compromiso) {
       return res.status(400).json({ error: "Faltan datos: fecha_entrega_compromiso" });
@@ -622,11 +622,31 @@ app.post("/compromisos/:id/cerrar", async (req, res) => {
       return res.status(400).json({ error: "fecha_entrega_compromiso debe ser YYYY-MM-DD" });
     }
 
-    const [rows] = await pool.query("SELECT estado FROM compromisos WHERE id = ?", [id]);
+    const [rows] = await pool.query("SELECT estado, observacion_general FROM compromisos WHERE id = ?", [id]);
     if (rows.length === 0) return res.status(404).json({ error: "No existe el compromiso" });
 
     if (rows[0].estado === "Cerrado") {
       return res.status(409).json({ error: "El compromiso ya está Cerrado" });
+    }
+
+    // Verificar requisito: debe tener evidencia O una observación (existente o nueva)
+    const [evRows] = await pool.query("SELECT id FROM evidencias WHERE compromiso_id = ? LIMIT 1", [id]);
+    const tieneEvidencia = evRows.length > 0;
+    const obsExistente = !!(rows[0].observacion_general?.trim());
+    const obsNueva = !!(observacion?.trim());
+
+    if (!tieneEvidencia && !obsExistente && !obsNueva) {
+      return res.status(400).json({
+        error: "Para cerrar el compromiso debe subir una evidencia o dejar una observación"
+      });
+    }
+
+    // Guardar observación de cierre en modo append si se proporcionó
+    if (obsNueva) {
+      const actual = rows[0].observacion_general || "";
+      const sello = new Date().toISOString().replace("T", " ").slice(0, 19);
+      const nuevaObs = actual ? `${actual}\n\n[${sello}] ${observacion.trim()}` : `[${sello}] ${observacion.trim()}`;
+      await pool.query("UPDATE compromisos SET observacion_general = ? WHERE id = ?", [nuevaObs, id]);
     }
 
     await pool.query(
