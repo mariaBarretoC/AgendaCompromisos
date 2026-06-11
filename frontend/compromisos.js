@@ -1,52 +1,50 @@
-/**
- * compromisos.js
- * Página exclusiva para gestionar compromisos:
- * - listar
- * - filtrar
- * - exportar
- * - evidencia
- * - observación
- * - historial
- * - reprogramar
- * - cerrar
- * - eliminar individual / múltiple
- */
-
 const API = "https://agendacompromisos.onrender.com";
 
 // =======================
-// DOM
+// DOM — Filtros / Toolbar
 // =======================
-const btnRecargar = document.getElementById("btn-recargar");
-const tbody = document.getElementById("tbody-compromisos");
-const chkTodos = document.getElementById("chk-todos");
-
-const btnExportar = document.getElementById("btn-exportar");
+const btnRecargar              = document.getElementById("btn-recargar");
+const tbody                    = document.getElementById("tbody-compromisos");
+const chkTodos                 = document.getElementById("chk-todos");
+const btnExportar              = document.getElementById("btn-exportar");
 const btnEliminarSeleccionados = document.getElementById("btn-eliminar-seleccionados");
 
-const filtroContrato = document.getElementById("filtro_contrato");
-const filtroEstado = document.getElementById("filtro_estado");
+const filtroContrato    = document.getElementById("filtro_contrato");
 const filtroResponsable = document.getElementById("filtro_responsable");
-const filtroAtrasado = document.getElementById("filtro_atrasado");
+const filtroAtrasado    = document.getElementById("filtro_atrasado");
+const dateField         = document.getElementById("date_field");
+const dateMode          = document.getElementById("date_mode");
+const dateValue         = document.getElementById("date_value");
+const btnFiltrar        = document.getElementById("btn-filtrar");
+const btnLimpiar        = document.getElementById("btn-limpiar");
 
-const dateField = document.getElementById("date_field");
-const dateMode = document.getElementById("date_mode");
-const dateValue = document.getElementById("date_value");
+// =======================
+// DOM — Modal Nuevo compromiso
+// =======================
+const btnNuevo           = document.getElementById("btn-nuevo");
+const dlgNuevo           = document.getElementById("dlg-nuevo");
+const btnCancelNuevo     = document.getElementById("btn-cancel-nuevo");
+const btnCancelNuevoForm = document.getElementById("btn-cancel-nuevo-form");
+const formCompromiso     = document.getElementById("form-compromiso");
+const fContratoId        = document.getElementById("f-contrato-id");
+const fResponsable       = document.getElementById("f-responsable");
+const fFechaEntrega      = document.getElementById("f-fecha-entrega");
+const fCompromiso        = document.getElementById("f-compromiso");
+const fObservacion       = document.getElementById("f-observacion");
 
-const btnFiltrar = document.getElementById("btn-filtrar");
-const btnLimpiar = document.getElementById("btn-limpiar");
-
-
-const dlgHistorial = document.getElementById("dlg-historial");
-const historialBody = document.getElementById("historial-body");
+// =======================
+// DOM — Modales existentes
+// =======================
+const dlgHistorial       = document.getElementById("dlg-historial");
+const historialBody      = document.getElementById("historial-body");
 const btnCerrarHistorial = document.getElementById("btn-cerrar-historial");
 
-const dlgObs = document.getElementById("dlg-observacion");
-const obsInfo = document.getElementById("obs-info");
-const obsModo = document.getElementById("obs-modo");
-const obsTexto = document.getElementById("obs-texto");
-const obsActual = document.getElementById("obs-actual");
-const btnCancelObs = document.getElementById("btn-cancel-obs");
+const dlgObs        = document.getElementById("dlg-observacion");
+const obsInfo       = document.getElementById("obs-info");
+const obsModo       = document.getElementById("obs-modo");
+const obsTexto      = document.getElementById("obs-texto");
+const obsActual     = document.getElementById("obs-actual");
+const btnCancelObs  = document.getElementById("btn-cancel-obs");
 const btnGuardarObs = document.getElementById("btn-guardar-obs");
 
 const fileEvidencia = document.getElementById("file-evidencia");
@@ -54,8 +52,8 @@ const fileEvidencia = document.getElementById("file-evidencia");
 // =======================
 // Estado
 // =======================
-let selectedId = null;
-let selectedObsActual = "";
+let selectedId              = null;
+let selectedObsActual       = "";
 let selectedEvidenciaCompId = null;
 
 // =======================
@@ -63,42 +61,34 @@ let selectedEvidenciaCompId = null;
 // =======================
 function escapeHtml(str) {
   return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
-
 function toDateInputValue(dateStr) {
-  if (!dateStr) return "";
-  return String(dateStr).slice(0, 10);
+  return dateStr ? String(dateStr).slice(0,10) : "";
 }
-
 function getSelectedEstados() {
-  return [...filtroEstado.selectedOptions].map((o) => o.value).filter(Boolean);
+  return [...document.querySelectorAll(".chk-estado:checked")].map(c => c.value);
 }
-
 function estadoBadge(estado) {
-  if (estado === "Pendiente") return `<span class="badge badge--pendiente">Pendiente</span>`;
+  if (estado === "Pendiente")    return `<span class="badge badge--pendiente">Pendiente</span>`;
   if (estado === "Reprogramado") return `<span class="badge badge--reprog">Reprogramado</span>`;
-  if (estado === "Cerrado") return `<span class="badge badge--cerrado">Cerrado</span>`;
+  if (estado === "Cerrado")      return `<span class="badge badge--cerrado">Cerrado</span>`;
   return `<span class="badge">${escapeHtml(estado)}</span>`;
 }
-
 function syncDateInputType() {
   dateValue.type = dateMode.value === "month" ? "month" : "date";
 }
 
 // =======================
-// HTTP
+// HTTP helpers
 // =======================
 async function apiGet(path) {
   const res = await fetch(API + path);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
-
 async function apiPost(path, body) {
   const res = await fetch(API + path, {
     method: "POST",
@@ -108,7 +98,6 @@ async function apiPost(path, body) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
-
 async function apiPatch(path, body) {
   const res = await fetch(API + path, {
     method: "PATCH",
@@ -118,7 +107,6 @@ async function apiPatch(path, body) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
-
 async function apiDelete(path) {
   const res = await fetch(API + path, { method: "DELETE" });
   if (!res.ok) throw new Error(await res.text());
@@ -130,13 +118,15 @@ async function apiDelete(path) {
 // =======================
 async function cargarContratos() {
   const contratos = await apiGet("/contratos");
-
   filtroContrato.innerHTML = `<option value="">(Todos)</option>`;
-  contratos.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.nombre;
-    filtroContrato.appendChild(opt);
+  fContratoId.innerHTML    = `<option value="">— Selecciona —</option>`;
+  contratos.forEach(c => {
+    const o1 = document.createElement("option");
+    o1.value = c.id; o1.textContent = c.nombre;
+    filtroContrato.appendChild(o1);
+    const o2 = document.createElement("option");
+    o2.value = c.id; o2.textContent = c.nombre;
+    fContratoId.appendChild(o2);
   });
 }
 
@@ -145,42 +135,23 @@ async function cargarContratos() {
 // =======================
 function buildQueryFromFilters() {
   const params = new URLSearchParams();
-
   if (filtroContrato.value) params.set("contrato_id", filtroContrato.value);
-
-  getSelectedEstados().forEach((e) => params.append("estado", e));
-
+  getSelectedEstados().forEach(e => params.append("estado", e));
   const resp = filtroResponsable.value.trim();
   if (resp) params.set("responsable", resp);
-
   if (filtroAtrasado.value !== "") params.set("atrasado", filtroAtrasado.value);
-
   if (dateField.value && dateValue.value) {
     params.set("date_field", dateField.value);
-    params.set("date_mode", dateMode.value);
+    params.set("date_mode",  dateMode.value);
     params.set("date_value", dateValue.value);
   }
-
   const qs = params.toString();
   return qs ? `?${qs}` : "";
 }
 
 // =======================
-// Tabla
+// KPIs
 // =======================
-function evidenciaCell(c) {
-  const tiene = Number(c.tiene_evidencia ?? 0) === 1;
-  if (!tiene) return `<span class="hint">Sin evidencia</span>`;
-
-  return `
-    <div class="actions">
-      <button class="iconbtn" type="button" title="Ver evidencia" data-action="evi_ver" data-id="${c.id}">👁</button>
-      <button class="iconbtn" type="button" title="Descargar evidencia" data-action="evi_down" data-id="${c.id}">⬇</button>
-      <button class="iconbtn" type="button" title="Eliminar evidencia" data-action="evi_del" data-id="${c.id}">🗑</button>
-    </div>
-  `;
-}
-
 function actualizarKPIs(lista) {
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set("kpi-total",     lista.length);
@@ -190,23 +161,43 @@ function actualizarKPIs(lista) {
   set("kpi-atrasado",  lista.filter(c => Number(c.atrasado) === 1).length);
 }
 
+async function cargarStats(query = "") {
+  try {
+    const s   = await apiGet("/compromisos/stats" + query);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = Number(val ?? 0); };
+    set("kpi-total",     s.total);
+    set("kpi-pendiente", s.pendiente);
+    set("kpi-reprog",    s.reprogramado);
+    set("kpi-cerrado",   s.cerrado);
+    set("kpi-atrasado",  s.atrasado);
+  } catch (e) { console.error("Stats error:", e.message); }
+}
+
+// =======================
+// Tabla
+// =======================
+function evidenciaCell(c) {
+  const tiene = Number(c.tiene_evidencia ?? 0) === 1;
+  if (!tiene) return `<span class="hint">Sin evidencia</span>`;
+  return `
+    <div class="actions">
+      <button class="iconbtn" type="button" title="Ver"       data-action="evi_ver"  data-id="${c.id}">👁</button>
+      <button class="iconbtn" type="button" title="Descargar" data-action="evi_down" data-id="${c.id}">⬇</button>
+      <button class="iconbtn" type="button" title="Eliminar"  data-action="evi_del"  data-id="${c.id}">🗑</button>
+    </div>`;
+}
+
 async function cargarCompromisos(query = "") {
   const compromisos = await apiGet("/compromisos" + query);
   actualizarKPIs(compromisos);
   tbody.innerHTML = "";
-
-  compromisos.forEach((c) => {
+  compromisos.forEach(c => {
     const tr = document.createElement("tr");
-
     if (Number(c.atrasado) === 1) tr.classList.add("row-late");
-
     const obs = c.observacion_general || "";
-    const obsPreview = obs.length > 60 ? obs.slice(0, 60) + "..." : obs;
-
+    const obsPreview = obs.length > 60 ? obs.slice(0,60) + "..." : obs;
     tr.innerHTML = `
-      <td class="col-check">
-        <input type="checkbox" class="chk-compromiso" data-id="${c.id}">
-      </td>
+      <td class="col-check"><input type="checkbox" class="chk-compromiso" data-id="${c.id}"></td>
       <td>${escapeHtml(c.contrato)}</td>
       <td>${escapeHtml(c.responsable)}</td>
       <td>${escapeHtml(c.compromiso)}</td>
@@ -217,36 +208,63 @@ async function cargarCompromisos(query = "") {
       <td>${escapeHtml(toDateInputValue(c.fecha_entrega_compromiso))}</td>
       <td>${Number(c.atrasado) === 1 ? "Sí" : "No"}</td>
       <td title="${escapeHtml(obs)}">${escapeHtml(obsPreview)}</td>
-
       <td>
         <div class="actions">
           <button class="iconbtn" type="button" title="Subir evidencia" data-action="evi_up" data-id="${c.id}">⬆</button>
         </div>
         ${evidenciaCell(c)}
       </td>
-
       <td class="col-actions">
         <div class="actions">
           <button class="iconbtn" type="button" title="Observación" data-action="observacion" data-id="${c.id}" data-obs="${encodeURIComponent(obs)}">📝</button>
-          <button class="iconbtn" type="button" title="Historial" data-action="historial" data-id="${c.id}">🕓</button>
+          <button class="iconbtn" type="button" title="Historial"   data-action="historial"   data-id="${c.id}">🕓</button>
         </div>
-      </td>
-    `;
-
+      </td>`;
     tbody.appendChild(tr);
   });
 }
 
 // =======================
-// Exportar
+// Modal Nuevo Compromiso
 // =======================
-btnExportar.addEventListener("click", () => {
-  const query = buildQueryFromFilters();
-  window.open(`${API}/compromisos/export${query}`, "_blank");
+btnNuevo.addEventListener("click", () => {
+  formCompromiso.reset();
+  dlgNuevo.showModal();
+});
+btnCancelNuevo.addEventListener("click",     () => dlgNuevo.close());
+btnCancelNuevoForm.addEventListener("click", () => dlgNuevo.close());
+
+formCompromiso.addEventListener("submit", async e => {
+  e.preventDefault();
+  const body = {
+    contrato_id:         Number(fContratoId.value),
+    responsable:         fResponsable.value.trim(),
+    compromiso:          fCompromiso.value.trim(),
+    fecha_entrega:       fFechaEntrega.value,
+    observacion_general: fObservacion.value.trim(),
+  };
+  if (!body.contrato_id) return alert("Selecciona un contrato");
+  try {
+    await apiPost("/compromisos", body);
+    alert("✅ Compromiso creado");
+    formCompromiso.reset();
+    dlgNuevo.close();
+    await cargarCompromisos(buildQueryFromFilters());
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error creando compromiso: " + err.message);
+  }
 });
 
 // =======================
-// Filtros
+// Exportar
+// =======================
+btnExportar.addEventListener("click", () => {
+  window.open(`${API}/compromisos/export${buildQueryFromFilters()}`, "_blank");
+});
+
+// =======================
+// Filtros — eventos
 // =======================
 dateMode.addEventListener("change", syncDateInputType);
 
@@ -256,16 +274,14 @@ btnFiltrar.addEventListener("click", async () => {
 });
 
 btnLimpiar.addEventListener("click", async () => {
-  filtroContrato.value = "";
+  filtroContrato.value    = "";
   filtroResponsable.value = "";
-  filtroAtrasado.value = "";
-  [...filtroEstado.options].forEach((o) => (o.selected = false));
-
+  filtroAtrasado.value    = "";
+  document.querySelectorAll(".chk-estado").forEach(c => c.checked = false);
   dateField.value = "";
-  dateMode.value = "day";
+  dateMode.value  = "day";
   syncDateInputType();
   dateValue.value = "";
-
   await cargarCompromisos("");
 });
 
@@ -278,9 +294,7 @@ btnRecargar.addEventListener("click", () => {
 // Seleccionar todos
 // =======================
 chkTodos.addEventListener("change", () => {
-  document.querySelectorAll(".chk-compromiso").forEach((c) => {
-    c.checked = chkTodos.checked;
-  });
+  document.querySelectorAll(".chk-compromiso").forEach(c => c.checked = chkTodos.checked);
 });
 
 // =======================
@@ -288,12 +302,9 @@ chkTodos.addEventListener("change", () => {
 // =======================
 btnEliminarSeleccionados.addEventListener("click", async () => {
   const ids = [...document.querySelectorAll(".chk-compromiso:checked")]
-    .map((x) => Number(x.dataset.id))
-    .filter((n) => Number.isFinite(n));
-
-  if (ids.length === 0) return alert("Selecciona al menos 1 compromiso.");
-  if (!confirm(`¿Seguro que deseas eliminar ${ids.length} compromiso(s)?`)) return;
-
+    .map(x => Number(x.dataset.id)).filter(Number.isFinite);
+  if (!ids.length) return alert("Selecciona al menos 1 compromiso.");
+  if (!confirm(`¿Eliminar ${ids.length} compromiso(s)?`)) return;
   try {
     const res = await apiPost("/compromisos/delete-bulk", { ids });
     alert(`✅ Eliminados: ${res.deleted_count}`);
@@ -301,7 +312,7 @@ btnEliminarSeleccionados.addEventListener("click", async () => {
     await cargarCompromisos(buildQueryFromFilters());
   } catch (err) {
     console.error(err);
-    alert("❌ Error eliminando: " + err.message);
+    alert("❌ Error: " + err.message);
   }
 });
 
@@ -317,60 +328,43 @@ function abrirSelectorEvidencia(compromisoId) {
 fileEvidencia.addEventListener("change", async () => {
   const file = fileEvidencia.files?.[0];
   if (!file) return;
-
-  if (!file.type.startsWith("image/")) {
-    alert("❌ Debe ser una imagen.");
-    return;
-  }
-
+  if (!file.type.startsWith("image/")) { alert("❌ Debe ser una imagen."); return; }
   if (!confirm("¿Subir esta evidencia?")) return;
-
   try {
     const formData = new FormData();
     formData.append("file", file);
-
     const res = await fetch(`${API}/compromisos/${selectedEvidenciaCompId}/evidencia`, {
-      method: "POST",
-      body: formData,
+      method: "POST", body: formData,
     });
-
     if (!res.ok) throw new Error(await res.text());
-
     alert("✅ Evidencia subida");
     await cargarCompromisos(buildQueryFromFilters());
   } catch (err) {
     console.error(err);
-    alert("❌ Error subiendo evidencia: " + err.message);
-  } finally {
-    selectedEvidenciaCompId = null;
-  }
+    alert("❌ Error: " + err.message);
+  } finally { selectedEvidenciaCompId = null; }
 });
-
 
 // =======================
 // Acciones de tabla
 // =======================
-tbody.addEventListener("click", async (e) => {
+tbody.addEventListener("click", async e => {
   const btn = e.target.closest("button");
   if (!btn) return;
-
-  const id = Number(btn.dataset.id);
+  const id     = Number(btn.dataset.id);
   const action = btn.dataset.action;
 
-  if (action === "evi_up") return abrirSelectorEvidencia(id);
-  if (action === "evi_ver") return window.open(`${API}/compromisos/${id}/evidencia/view`, "_blank");
+  if (action === "evi_up")   return abrirSelectorEvidencia(id);
+  if (action === "evi_ver")  return window.open(`${API}/compromisos/${id}/evidencia/view`,     "_blank");
   if (action === "evi_down") return window.open(`${API}/compromisos/${id}/evidencia/download`, "_blank");
 
   if (action === "evi_del") {
-    if (!confirm("¿Eliminar la evidencia de este compromiso?")) return;
+    if (!confirm("¿Eliminar la evidencia?")) return;
     try {
       await apiDelete(`/compromisos/${id}/evidencia`);
-      alert("✅ Evidencia eliminada");
+      alert("✅ Eliminada");
       await cargarCompromisos(buildQueryFromFilters());
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error eliminando evidencia: " + err.message);
-    }
+    } catch (err) { alert("❌ " + err.message); }
     return;
   }
 
@@ -379,26 +373,18 @@ tbody.addEventListener("click", async (e) => {
     const hist = await apiGet(`/compromisos/${id}/historial`);
     historialBody.innerHTML = !hist.length
       ? "<div class='hint'>No hay reprogramaciones.</div>"
-      : `
-        <table style="width:100%; border-collapse:collapse; margin-top:10px;">
-          <thead>
-            <tr>
-              <th style="border:1px solid #ddd; padding:8px;">Anterior</th>
-              <th style="border:1px solid #ddd; padding:8px;">Nueva</th>
-              <th style="border:1px solid #ddd; padding:8px;">Fecha cambio</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${hist.map(h => `
-              <tr>
-                <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(toDateInputValue(h.fecha_anterior))}</td>
-                <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(toDateInputValue(h.nueva_fecha))}</td>
-                <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(String(h.fecha_reprogramacion).replace("T"," ").slice(0,19))}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      `;
+      : `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
+          <thead><tr>
+            <th style="border:1px solid #ddd;padding:8px;">Anterior</th>
+            <th style="border:1px solid #ddd;padding:8px;">Nueva</th>
+            <th style="border:1px solid #ddd;padding:8px;">Fecha cambio</th>
+          </tr></thead>
+          <tbody>${hist.map(h => `<tr>
+            <td style="border:1px solid #ddd;padding:8px;">${escapeHtml(toDateInputValue(h.fecha_anterior))}</td>
+            <td style="border:1px solid #ddd;padding:8px;">${escapeHtml(toDateInputValue(h.nueva_fecha))}</td>
+            <td style="border:1px solid #ddd;padding:8px;">${escapeHtml(String(h.fecha_reprogramacion).replace("T"," ").slice(0,19))}</td>
+          </tr>`).join("")}</tbody>
+        </table>`;
     dlgHistorial.showModal();
     return;
   }
@@ -408,65 +394,36 @@ tbody.addEventListener("click", async (e) => {
     const obs = decodeURIComponent(btn.dataset.obs || "");
     selectedObsActual = obs;
     obsInfo.textContent = `Compromiso ID: ${id}`;
-    obsTexto.value = "";
-    obsModo.value = "append";
+    obsTexto.value  = "";
+    obsModo.value   = "append";
     obsActual.value = selectedObsActual || "";
     dlgObs.showModal();
-    return;
-  }
-
-  if (action === "eliminar") {
-    if (!confirm("¿Eliminar este compromiso?")) return;
-    try {
-      await apiDelete(`/compromisos/${id}`);
-      alert("✅ Eliminado");
-      await cargarCompromisos(buildQueryFromFilters());
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error eliminando: " + err.message);
-    }
     return;
   }
 });
 
 // =======================
-// Modales
+// Modales existentes
 // =======================
 btnCerrarHistorial.addEventListener("click", () => dlgHistorial.close());
 
 btnCancelObs.addEventListener("click", () => dlgObs.close());
 btnGuardarObs.addEventListener("click", async () => {
   const texto = obsTexto.value.trim();
-  const modo = obsModo.value;
+  const modo  = obsModo.value;
   if (!texto) return alert("Escribe la observación");
-
   try {
     const updated = await apiPatch(`/compromisos/${selectedId}/observacion`, { texto, modo });
-    selectedObsActual = updated.observacion_general || "";
+    selectedObsActual   = updated.observacion_general || "";
     obsActual.value = selectedObsActual;
-    obsTexto.value = "";
+    obsTexto.value  = "";
     await cargarCompromisos(buildQueryFromFilters());
     alert("✅ Observación guardada");
   } catch (err) {
     console.error(err);
-    alert("❌ Error guardando observación: " + err.message);
+    alert("❌ " + err.message);
   }
 });
-
-// =======================
-// Stats / KPI
-// =======================
-async function cargarStats(query = "") {
-  try {
-    const s = await apiGet("/compromisos/stats" + query);
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = Number(val ?? 0); };
-    set("kpi-total",     s.total);
-    set("kpi-pendiente", s.pendiente);
-    set("kpi-reprog",    s.reprogramado);
-    set("kpi-cerrado",   s.cerrado);
-    set("kpi-atrasado",  s.atrasado);
-  } catch (e) { console.error("Stats error:", e.message); }
-}
 
 // =======================
 // Init
