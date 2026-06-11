@@ -108,6 +108,18 @@ async function initDB() {
 
   await pool.query("SELECT 1");
   console.log("✅ Conectado a MySQL");
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS reuniones (
+      id          INT AUTO_INCREMENT PRIMARY KEY,
+      titulo      VARCHAR(300) NOT NULL,
+      dia         TINYINT UNSIGNED NOT NULL COMMENT '1=Lunes 2=Martes 3=Miercoles 4=Jueves 5=Viernes 6=Sabado',
+      hora_inicio VARCHAR(5)  NOT NULL,
+      hora_fin    VARCHAR(5)  NOT NULL,
+      color       VARCHAR(10) NOT NULL DEFAULT '#fbbf24',
+      created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 // =========================================================
@@ -1349,6 +1361,62 @@ app.post("/compromisos/delete-bulk", async (req, res) => {
   } catch (err) {
     console.error("Error POST /compromisos/delete-bulk:", err);
     res.status(500).json({ error: "Error eliminando en lote" });
+  }
+});
+
+// =========================================================
+//  REUNIONES (agenda semanal)
+// =========================================================
+
+app.get("/reuniones", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM reuniones ORDER BY dia, hora_inicio"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Error GET /reuniones:", err);
+    res.status(500).json({ error: "Error consultando reuniones" });
+  }
+});
+
+app.post("/reuniones", async (req, res) => {
+  try {
+    const { titulo, dia, hora_inicio, hora_fin, color } = req.body;
+    if (!titulo || !dia || !hora_inicio || !hora_fin)
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
+    const [result] = await pool.query(
+      "INSERT INTO reuniones (titulo, dia, hora_inicio, hora_fin, color) VALUES (?,?,?,?,?)",
+      [titulo.trim(), dia, hora_inicio, hora_fin, color || "#fbbf24"]
+    );
+    res.json({ id: result.insertId });
+  } catch (err) {
+    console.error("Error POST /reuniones:", err);
+    res.status(500).json({ error: "Error creando reunión" });
+  }
+});
+
+app.put("/reuniones/:id", async (req, res) => {
+  try {
+    const { titulo, dia, hora_inicio, hora_fin, color } = req.body;
+    await pool.query(
+      "UPDATE reuniones SET titulo=?, dia=?, hora_inicio=?, hora_fin=?, color=? WHERE id=?",
+      [titulo.trim(), dia, hora_inicio, hora_fin, color || "#fbbf24", req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Error PUT /reuniones/:id:", err);
+    res.status(500).json({ error: "Error actualizando reunión" });
+  }
+});
+
+app.delete("/reuniones/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM reuniones WHERE id=?", [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Error DELETE /reuniones/:id:", err);
+    res.status(500).json({ error: "Error eliminando reunión" });
   }
 });
 

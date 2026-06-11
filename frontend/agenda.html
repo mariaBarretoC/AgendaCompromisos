@@ -3,15 +3,253 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Programación de Reuniones</title>
-  <link rel="stylesheet" href="./agenda.css" />
+  <title>Programación Reuniones — Hesego</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    /* ---- Página ---- */
+    .ag-page {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 18px 18px 48px;
+    }
+
+    /* ---- Cabezal estilo imagen ---- */
+    .ag-header {
+      display: flex;
+      align-items: stretch;
+      background: var(--brand1);
+      border-radius: var(--radius) var(--radius) 0 0;
+      overflow: hidden;
+      min-height: 88px;
+    }
+    .ag-header__title {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 18px 28px;
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .ag-header__stats {
+      display: flex;
+      align-items: stretch;
+      border-left: 1px solid rgba(255,255,255,.2);
+    }
+    .ag-header__stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 24px;
+      border-right: 1px solid rgba(255,255,255,.2);
+      min-width: 140px;
+    }
+    .ag-header__stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,255,255,.75);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .ag-header__stat-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      margin-top: 4px;
+    }
+    .ag-header__logo {
+      width: 70px;
+      object-fit: contain;
+      padding: 10px 18px;
+      background: #fff;
+    }
+
+    /* ---- Barra de acciones ---- */
+    .ag-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #f8fafd;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 10px 16px;
+    }
+
+    /* ---- Tabla ---- */
+    .ag-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      background: #fff;
+    }
+
+    .ag-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    /* Encabezado días */
+    .ag-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: var(--brand1);
+      color: #fff;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 11px 8px;
+      border-right: 1px solid rgba(255,255,255,.15);
+    }
+    .ag-table thead th:first-child {
+      width: 72px;
+      min-width: 72px;
+      background: #004f5a;
+    }
+
+    /* Columna hora */
+    .ag-table tbody .col-hora {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: #f0f4f8;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--brand1);
+      text-align: center;
+      padding: 0 8px;
+      height: 36px;
+      border-right: 2px solid var(--brand2);
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    /* Celdas vacías */
+    .ag-table tbody td.ag-cell {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 0;
+      min-width: 130px;
+      height: 36px;
+      vertical-align: middle;
+      cursor: pointer;
+      transition: background .1s;
+    }
+    .ag-table tbody td.ag-cell:hover {
+      background: #e0f7f8;
+    }
+    .ag-table tbody td.ag-cell:last-child { border-right: none; }
+
+    /* Celda con reunión */
+    .ag-table tbody td.ag-meeting {
+      background: #fbbf24;
+      border: 1px solid #f59e0b;
+      vertical-align: middle;
+      padding: 6px 10px;
+      cursor: pointer;
+      position: relative;
+    }
+    .ag-table tbody td.ag-meeting:hover { filter: brightness(.94); }
+
+    .meeting-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: #422800;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    /* Botón eliminar en meeting cell */
+    .meeting-del {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0,0,0,.18);
+      color: #fff;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    td.ag-meeting:hover .meeting-del { opacity: 1; }
+
+    /* ---- Modal ---- */
+    .dlg-agenda {
+      border: none;
+      border-radius: 14px;
+      padding: 0;
+      width: min(480px, 96vw);
+      box-shadow: 0 10px 30px rgba(15,23,42,.15);
+    }
+    .dlg-agenda::backdrop { background: rgba(15,23,42,.45); }
+
+    .dlg-agenda .dlg__head {
+      padding: 14px 18px;
+      background: var(--brand1);
+      border-radius: 14px 14px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dlg-agenda .dlg__title { color: #fff; font-weight: 800; font-size: 15px; }
+    .dlg-agenda .dlg__body  { padding: 18px; background: #fff; border-radius: 0 0 14px 14px; }
+
+    .close-x {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .color-opts {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .color-opts label {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform .1s, border-color .1s;
+    }
+    .color-opts label:has(input:checked) {
+      border-color: var(--brand1);
+      transform: scale(1.15);
+    }
+    .color-opts input { display: none; }
+
+    @media (max-width: 768px) {
+      .ag-header { flex-wrap: wrap; }
+      .ag-header__title { font-size: 18px; padding: 14px 16px; }
+      .ag-header__stat  { min-width: 100px; padding: 8px 14px; }
+      .ag-header__stat-value { font-size: 22px; }
+    }
+  </style>
 </head>
 
 <body>
-
-  <!-- =======================
-       HEADER / NAVBAR
-  ======================== -->
   <header class="topbar">
     <div class="brand">
       <img class="brand__logo" src="./logo1.png" alt="Logo Hesego" />
@@ -20,107 +258,111 @@
         <div class="brand__subtitle">Hesego Ingeniería S.A.S</div>
       </div>
     </div>
-
     <nav class="topnav">
-      <a class="navlink" href="./index.html">Registrar Compromiso</a>
-      <button id="btn-recargar" class="btn" type="button" title="Recargar agenda">
-        ⟲ Recargar
-      </button>
+      <a class="navlink" href="./Compromisos.html">Compromisos</a>
+      <a class="navlink" href="./Checklist.html">Checklist</a>
     </nav>
   </header>
 
-  <!-- =======================
-       CONTENIDO
-  ======================== -->
-  <main class="page">
-    <section class="card">
-      <h2 class="card__title">Programación de Reuniones</h2>
-      <p class="card__subtitle">Agenda semanal (08:00 A.M – 05:00 P.M). Haz clic en una celda para programar.</p>
+  <div class="ag-page">
 
-      <div class="tableWrap">
-        <table class="agenda">
-          <thead>
-            <tr>
-              <th>HORA</th>
-              <th>LUNES</th>
-              <th>MARTES</th>
-              <th>MIÉRCOLES</th>
-              <th>JUEVES</th>
-              <th>VIERNES</th>
-              <th>SÁBADO</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr>
-              <th>08:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>08:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>09:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>09:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>10:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>10:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>11:00 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>11:30 A.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>12:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>12:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>01:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>01:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>02:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>02:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>03:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>03:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>04:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>04:30 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-              <th>05:00 P.M</th><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- Cabezal visual estilo imagen -->
+    <div class="ag-header">
+      <div class="ag-header__title">Programación Reuniones</div>
+      <div class="ag-header__stats">
+        <div class="ag-header__stat">
+          <div class="ag-header__stat-label">Inicio de la<br>Programación</div>
+          <div class="ag-header__stat-value">08:00</div>
+        </div>
+        <div class="ag-header__stat">
+          <div class="ag-header__stat-label">Intervalo<br>de Tiempo</div>
+          <div class="ag-header__stat-value" id="intervalo-val">30 MIN</div>
+        </div>
+        <img class="ag-header__logo" src="./logo1.png" alt="Hesego" />
       </div>
-    </section>
-  </main>
+    </div>
 
-  <!-- (Opcional) JS para el botón recargar -->
-  <script>
-    document.getElementById("btn-recargar")?.addEventListener("click", () => {
-      location.reload();
-    });
-  </script>
+    <!-- Barra de herramientas -->
+    <div class="ag-toolbar">
+      <span style="font-size:12px;color:#64748b;margin-right:auto;">
+        Haz clic en una celda vacía para agregar una reunión
+      </span>
+      <button class="btn btn--primary" id="btn-nueva" type="button">+ Nueva reunión</button>
+    </div>
 
+    <!-- Calendario -->
+    <div class="ag-wrap">
+      <table class="ag-table" id="ag-table">
+        <thead>
+          <tr>
+            <th>HORA</th>
+            <th>LUNES</th>
+            <th>MARTES</th>
+            <th>MIÉRCOLES</th>
+            <th>JUEVES</th>
+            <th>VIERNES</th>
+            <th>SÁBADO</th>
+          </tr>
+        </thead>
+        <tbody id="ag-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal agregar / editar reunión -->
+  <dialog class="dlg-agenda" id="dlg-reunion">
+    <div class="dlg__head">
+      <div class="dlg__title" id="dlg-title">Nueva reunión</div>
+      <button class="close-x" id="btn-dlg-close" type="button">✕</button>
+    </div>
+    <div class="dlg__body">
+      <input type="hidden" id="edit-id" value="" />
+
+      <div class="field" style="margin-bottom:12px;">
+        <label for="f-titulo">Título / Descripción</label>
+        <input type="text" id="f-titulo" placeholder="Ej: Valle Norte Integral (2876) - LYR - Zarzal" />
+      </div>
+
+      <div class="grid2" style="gap:10px;margin-bottom:12px;">
+        <div class="field">
+          <label for="f-dia">Día</label>
+          <select id="f-dia">
+            <option value="1">Lunes</option>
+            <option value="2">Martes</option>
+            <option value="3">Miércoles</option>
+            <option value="4">Jueves</option>
+            <option value="5">Viernes</option>
+            <option value="6">Sábado</option>
+          </select>
+        </div>
+        <div class="field"><!-- spacer --></div>
+      </div>
+
+      <div class="grid2" style="gap:10px;margin-bottom:12px;">
+        <div class="field">
+          <label for="f-inicio">Hora inicio</label>
+          <select id="f-inicio"></select>
+        </div>
+        <div class="field">
+          <label for="f-fin">Hora fin</label>
+          <select id="f-fin"></select>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:16px;">
+        <label>Color</label>
+        <div class="color-opts" id="color-opts">
+          <!-- Se genera por JS -->
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn--ghost" id="btn-dlg-cancel" type="button">Cancelar</button>
+        <button class="btn btn--primary" id="btn-dlg-save" type="button">Guardar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="./agenda.js"></script>
 </body>
 </html>
