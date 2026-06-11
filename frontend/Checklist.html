@@ -12,17 +12,17 @@
       padding: 20px 18px 48px;
     }
 
-    /* Info de reunión */
+    /* Encabezado */
     .meeting-card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow-sm);
-      padding: 18px 20px;
+      padding: 16px 20px;
       margin-bottom: 14px;
     }
     .meeting-card h2 {
-      margin: 0 0 14px;
+      margin: 0 0 10px;
       font-size: 18px;
       font-weight: 800;
       color: var(--brand1);
@@ -30,7 +30,6 @@
 
     /* Progreso */
     .progress-wrap {
-      margin-top: 16px;
       display: flex;
       align-items: center;
       gap: 12px;
@@ -76,9 +75,7 @@
       text-transform: uppercase;
       letter-spacing: .5px;
     }
-    .cl-section__body {
-      padding: 6px 0;
-    }
+    .cl-section__body { padding: 6px 0; }
 
     /* Ítem */
     .cl-item {
@@ -114,15 +111,9 @@
       text-decoration: line-through;
       color: var(--muted);
     }
-    .cl-item--main label {
-      font-weight: 700;
-      color: var(--brand1);
-    }
-    .cl-item.cl-item--checked.cl-item--main label {
-      color: var(--muted);
-    }
+    .cl-item--main label { font-weight: 700; color: var(--brand1); }
+    .cl-item.cl-item--checked.cl-item--main label { color: var(--muted); }
 
-    /* Check icon */
     .cl-item__icon {
       font-size: 15px;
       opacity: 0;
@@ -131,20 +122,10 @@
     }
     .cl-item.cl-item--checked .cl-item__icon { opacity: 1; }
 
-    /* Botones al pie */
     .cl-footer {
       display: flex;
-      gap: 10px;
       justify-content: flex-end;
       margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    @media print {
-      .topbar, .cl-footer, .meeting-card .grid3 { display: none !important; }
-      .progress-wrap { display: none; }
-      .cl-item.cl-item--checked label { text-decoration: none; color: var(--text); }
-      body { background: #fff; }
     }
 
     @media (max-width: 600px) {
@@ -165,7 +146,6 @@
       </div>
     </div>
     <nav class="topnav">
-      <a class="navlink" href="./index.html">Registrar Compromiso</a>
       <a class="navlink" href="./Compromisos.html">Compromisos</a>
       <a class="navlink" href="./agenda.html">Programación Reuniones</a>
     </nav>
@@ -173,23 +153,9 @@
 
   <div class="cl-wrap">
 
-    <!-- Info de reunión + progreso -->
+    <!-- Encabezado + progreso -->
     <div class="meeting-card">
       <h2>✅ Checklist de Reunión</h2>
-      <div class="grid3">
-        <div class="field">
-          <label for="fecha-reunion">Fecha</label>
-          <input type="date" id="fecha-reunion" />
-        </div>
-        <div class="field">
-          <label for="contrato-reunion">Contrato / Proyecto</label>
-          <input type="text" id="contrato-reunion" placeholder="Ej: Mtto Espinal" />
-        </div>
-        <div class="field">
-          <label for="lider-reunion">Líder de reunión</label>
-          <input type="text" id="lider-reunion" placeholder="Nombre del responsable" />
-        </div>
-      </div>
       <div class="progress-wrap">
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" id="progress-fill"></div>
@@ -202,7 +168,7 @@
     <div class="cl-section">
       <div class="cl-section__header">Apertura</div>
       <div class="cl-section__body">
-        <div class="cl-item cl-item--main" data-id="1">
+        <div class="cl-item cl-item--main">
           <input type="checkbox" id="c1" />
           <label for="c1">Compromisos de la reunión anterior</label>
           <span class="cl-item__icon">✓</span>
@@ -214,27 +180,27 @@
     <div class="cl-section">
       <div class="cl-section__header">Indicadores de Inspección</div>
       <div class="cl-section__body">
-        <div class="cl-item cl-item--main" data-id="2">
+        <div class="cl-item cl-item--main">
           <input type="checkbox" id="c2" />
           <label for="c2">Indicador Inspecciones</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="3">
+        <div class="cl-item">
           <input type="checkbox" id="c3" />
           <label for="c3">Inspección de Supervisor al Proceso</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="4">
+        <div class="cl-item">
           <input type="checkbox" id="c4" />
           <label for="c4">Inspección de Equipos y Herramientas</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="5">
+        <div class="cl-item">
           <input type="checkbox" id="c5" />
           <label for="c5">Lista de Chequeo de SST y Ambiente</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="6">
+        <div class="cl-item">
           <input type="checkbox" id="c6" />
           <label for="c6">Yeo's</label>
           <span class="cl-item__icon">✓</span>
@@ -246,27 +212,27 @@
     <div class="cl-section">
       <div class="cl-section__header">Hallazgos y Seguridad</div>
       <div class="cl-section__body">
-        <div class="cl-item cl-item--main" data-id="7">
+        <div class="cl-item cl-item--main">
           <input type="checkbox" id="c7" />
           <label for="c7">Indicador de Hallazgos</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="8">
+        <div class="cl-item">
           <input type="checkbox" id="c8" />
           <label for="c8">Cierres de hallazgos</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="9">
+        <div class="cl-item">
           <input type="checkbox" id="c9" />
           <label for="c9">Eventos o Incidentes encontrados por SST</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="10">
+        <div class="cl-item">
           <input type="checkbox" id="c10" />
           <label for="c10">Validación de Preoperacionales</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="11">
+        <div class="cl-item">
           <input type="checkbox" id="c11" />
           <label for="c11">Validación de Excesos de velocidad</label>
           <span class="cl-item__icon">✓</span>
@@ -278,47 +244,47 @@
     <div class="cl-section">
       <div class="cl-section__header">Indicadores Internos</div>
       <div class="cl-section__body">
-        <div class="cl-item cl-item--main" data-id="12">
+        <div class="cl-item cl-item--main">
           <input type="checkbox" id="c12" />
           <label for="c12">Indicadores Internos</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="13">
+        <div class="cl-item">
           <input type="checkbox" id="c13" />
           <label for="c13">Disponibilidad</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="14">
+        <div class="cl-item">
           <input type="checkbox" id="c14" />
           <label for="c14">Indisponibilidad</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="15">
+        <div class="cl-item">
           <input type="checkbox" id="c15" />
           <label for="c15">Cumplimiento al ingreso</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="16">
+        <div class="cl-item">
           <input type="checkbox" id="c16" />
           <label for="c16">Programación</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="17">
+        <div class="cl-item">
           <input type="checkbox" id="c17" />
           <label for="c17">Primera actividad ejecutada en terreno</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="18">
+        <div class="cl-item">
           <input type="checkbox" id="c18" />
           <label for="c18">Rendimientos x supervisores y brigadas</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="19">
+        <div class="cl-item">
           <input type="checkbox" id="c19" />
           <label for="c19">No conformidades del cliente</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="20">
+        <div class="cl-item">
           <input type="checkbox" id="c20" />
           <label for="c20">Horas extras</label>
           <span class="cl-item__icon">✓</span>
@@ -330,22 +296,22 @@
     <div class="cl-section">
       <div class="cl-section__header">Cierre</div>
       <div class="cl-section__body">
-        <div class="cl-item" data-id="21">
+        <div class="cl-item">
           <input type="checkbox" id="c21" />
           <label for="c21">Validación Reportes y Seguimiento por parte de Neo</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item cl-item--main" data-id="22">
+        <div class="cl-item cl-item--main">
           <input type="checkbox" id="c22" />
           <label for="c22">Compromisos de la siguiente reunión</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item" data-id="23">
+        <div class="cl-item">
           <input type="checkbox" id="c23" />
           <label for="c23">Indicador de Calidad y Cumplimiento</label>
           <span class="cl-item__icon">✓</span>
         </div>
-        <div class="cl-item cl-item--main" data-id="24">
+        <div class="cl-item cl-item--main">
           <input type="checkbox" id="c24" />
           <label for="c24">PMR</label>
           <span class="cl-item__icon">✓</span>
@@ -355,7 +321,6 @@
 
     <div class="cl-footer">
       <button class="btn btn--ghost" id="btn-reset" type="button">↩ Reiniciar</button>
-      <button class="btn btn--primary" id="btn-print" type="button">🖨 Imprimir</button>
     </div>
   </div>
 
@@ -364,25 +329,18 @@
     const fill  = document.getElementById("progress-fill");
     const label = document.getElementById("progress-label");
 
-    function contarChecked() {
-      return document.querySelectorAll(".cl-item input[type='checkbox']:checked").length;
-    }
-
     function actualizarProgreso() {
-      const checked = contarChecked();
-      const pct = Math.round((checked / TOTAL) * 100);
-      fill.style.width  = pct + "%";
+      const checked = document.querySelectorAll(".cl-item input[type='checkbox']:checked").length;
+      fill.style.width  = Math.round((checked / TOTAL) * 100) + "%";
       label.textContent = `${checked} / ${TOTAL}`;
     }
 
     document.querySelectorAll(".cl-item").forEach(item => {
       const chk = item.querySelector("input[type='checkbox']");
-
       function sync() {
         item.classList.toggle("cl-item--checked", chk.checked);
         actualizarProgreso();
       }
-
       chk.addEventListener("change", sync);
       item.addEventListener("click", e => {
         if (e.target === chk) return;
@@ -399,11 +357,6 @@
       });
       actualizarProgreso();
     });
-
-    document.getElementById("btn-print").addEventListener("click", () => window.print());
-
-    // Fecha actual por defecto
-    document.getElementById("fecha-reunion").valueAsDate = new Date();
   </script>
 </body>
 </html>
