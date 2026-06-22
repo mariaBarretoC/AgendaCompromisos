@@ -156,7 +156,7 @@ async function cargarContratos() {
   const contratos = await apiGet("/contratos");
 
   if (contratoSelect) {
-    contratoSelect.innerHTML = "";
+    contratoSelect.innerHTML = `<option value="">— Selecciona un contrato —</option>`;
     contratos.forEach((c) => {
       const opt = document.createElement("option");
       opt.value = c.id;
