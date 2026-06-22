@@ -163,6 +163,11 @@ async function cargarContratos() {
       opt.textContent = c.nombre;
       contratoSelect.appendChild(opt);
     });
+    // Opción para crear contrato nuevo
+    const optNew = document.createElement("option");
+    optNew.value = "__nuevo__";
+    optNew.textContent = "+ Crear nuevo contrato...";
+    contratoSelect.appendChild(optNew);
   }
 
   if (filtroContrato) {
@@ -174,6 +179,46 @@ async function cargarContratos() {
       filtroContrato.appendChild(opt);
     });
   }
+}
+
+// Mostrar/ocultar panel de nuevo contrato
+const nuevoContratoRow    = document.getElementById("nuevo-contrato-row");
+const nuevoContratoNombre = document.getElementById("nuevo-contrato-nombre");
+const btnCrearContrato    = document.getElementById("btn-crear-contrato");
+const btnCancelarContrato = document.getElementById("btn-cancelar-contrato");
+
+if (contratoSelect && nuevoContratoRow) {
+  contratoSelect.addEventListener("change", () => {
+    if (contratoSelect.value === "__nuevo__") {
+      nuevoContratoRow.style.display = "flex";
+      nuevoContratoNombre.value = "";
+      nuevoContratoNombre.focus();
+    } else {
+      nuevoContratoRow.style.display = "none";
+    }
+  });
+}
+
+if (btnCrearContrato) {
+  btnCrearContrato.addEventListener("click", async () => {
+    const nombre = nuevoContratoNombre.value.trim();
+    if (!nombre) return alert("Escribe el nombre del contrato");
+    try {
+      const nuevo = await apiPost("/contratos", { nombre });
+      await cargarContratos();
+      contratoSelect.value = nuevo.id;
+      nuevoContratoRow.style.display = "none";
+    } catch (err) {
+      alert("❌ Error creando contrato: " + err.message);
+    }
+  });
+}
+
+if (btnCancelarContrato) {
+  btnCancelarContrato.addEventListener("click", () => {
+    nuevoContratoRow.style.display = "none";
+    contratoSelect.value = contratoSelect.options[0]?.value ?? "";
+  });
 }
 
 // =======================

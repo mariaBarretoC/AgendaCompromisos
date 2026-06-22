@@ -128,7 +128,46 @@ async function cargarContratos() {
     o2.value = c.id; o2.textContent = c.nombre;
     fContratoId.appendChild(o2);
   });
+  // Opción para crear contrato nuevo en el modal
+  const optNew = document.createElement("option");
+  optNew.value = "__nuevo__";
+  optNew.textContent = "+ Crear nuevo contrato...";
+  fContratoId.appendChild(optNew);
 }
+
+// Widget crear contrato (modal Nuevo compromiso)
+const fNuevoContratoRow    = document.getElementById("f-nuevo-contrato-row");
+const fNuevoContratoNombre = document.getElementById("f-nuevo-contrato-nombre");
+const fBtnCrearContrato    = document.getElementById("f-btn-crear-contrato");
+const fBtnCancelarContrato = document.getElementById("f-btn-cancelar-contrato");
+
+fContratoId.addEventListener("change", () => {
+  if (fContratoId.value === "__nuevo__") {
+    fNuevoContratoRow.style.display = "flex";
+    fNuevoContratoNombre.value = "";
+    fNuevoContratoNombre.focus();
+  } else {
+    fNuevoContratoRow.style.display = "none";
+  }
+});
+
+fBtnCrearContrato.addEventListener("click", async () => {
+  const nombre = fNuevoContratoNombre.value.trim();
+  if (!nombre) return alert("Escribe el nombre del contrato");
+  try {
+    const nuevo = await apiPost("/contratos", { nombre });
+    await cargarContratos();
+    fContratoId.value = nuevo.id;
+    fNuevoContratoRow.style.display = "none";
+  } catch (err) {
+    alert("❌ Error creando contrato: " + err.message);
+  }
+});
+
+fBtnCancelarContrato.addEventListener("click", () => {
+  fNuevoContratoRow.style.display = "none";
+  fContratoId.value = "";
+});
 
 // =======================
 // Filtros

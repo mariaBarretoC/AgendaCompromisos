@@ -160,6 +160,12 @@
             <div class="field">
               <label for="contrato_id">Contrato</label>
               <select id="contrato_id" required></select>
+              <div id="nuevo-contrato-row" style="display:none;margin-top:6px;gap:6px;align-items:center;">
+                <input id="nuevo-contrato-nombre" type="text" placeholder="Nombre del nuevo contrato..."
+                       style="flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;" />
+                <button type="button" id="btn-crear-contrato" class="btn btn--primary" style="white-space:nowrap;">Crear</button>
+                <button type="button" id="btn-cancelar-contrato" class="btn btn--ghost">✕</button>
+              </div>
             </div>
 
             <div class="field">
