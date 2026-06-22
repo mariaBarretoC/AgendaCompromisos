@@ -5,12 +5,99 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Agenda de Compromisos</title>
   <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .cp-page { padding: 12px 18px 32px; }
+
+    /* Barra de filtros horizontal (igual que Compromisos.html) */
+    .filter-bar {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: flex-end;
+      margin-bottom: 10px;
+    }
+    .fb-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .fb-field > label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+    .fb-field select,
+    .fb-field input[type="text"],
+    .fb-field input[type="date"],
+    .fb-field input[type="month"] {
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--text);
+      min-width: 110px;
+      outline: none;
+    }
+    .fb-field select:focus, .fb-field input:focus {
+      border-color: var(--brand3);
+      box-shadow: 0 0 0 2px rgba(0,196,204,.15);
+    }
+    .fb-sep {
+      width: 1px;
+      background: var(--line);
+      align-self: stretch;
+      margin: 0 2px;
+    }
+    .estado-checks {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 3px;
+    }
+    .estado-checks label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .estado-checks input[type="checkbox"] {
+      accent-color: var(--brand2);
+      width: 14px;
+      height: 14px;
+    }
+    .fb-btns {
+      display: flex;
+      gap: 6px;
+      align-items: flex-end;
+    }
+    .fb-btns .btn { padding: 6px 14px; font-size: 12px; }
+
+    /* Toolbar sobre tabla */
+    .tbl-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .tbl-toolbar__spacer { flex: 1; }
+
+    @media (max-width: 900px) { .fb-sep { display: none; } }
+  </style>
 </head>
 
 <body>
-  <!-- =======================
-       HEADER / NAVBAR
-  ======================== -->
   <header class="topbar">
     <div class="brand">
       <img class="brand__logo" src="./logo1.png" alt="Logo Hesego" />
@@ -19,7 +106,6 @@
         <div class="brand__subtitle">Hesego Ingeniería S.A.S</div>
       </div>
     </div>
-
     <nav class="topnav">
       <a class="navlink" href="./Compromisos.html">Validar Compromisos</a>
       <a class="navlink" href="./agenda.html">Programación Reuniones</a>
@@ -30,9 +116,6 @@
     </nav>
   </header>
 
-  <!-- =======================
-       LAYOUT
-  ======================== -->
   <!-- KPI Stats -->
   <div class="kpi-row">
     <div class="kpi-card kpi-card--total">
@@ -57,191 +140,165 @@
     </div>
   </div>
 
-  <div class="layout">
-    <!-- ===== Sidebar ===== -->
-    <aside class="sidebar">
-      <!-- Panel filtros -->
-      <section class="panel">
-        <div class="panel__title">Filtros</div>
+  <div class="cp-page">
 
-        <div class="field">
-          <label for="filtro_contrato">Contrato</label>
-          <select id="filtro_contrato"></select>
+    <!-- Filtros horizontales -->
+    <div class="filter-bar">
+      <div class="fb-field">
+        <label>Contrato</label>
+        <select id="filtro_contrato"></select>
+      </div>
+
+      <div class="fb-sep"></div>
+
+      <div class="fb-field">
+        <label>Estado</label>
+        <div class="estado-checks">
+          <label><input type="checkbox" class="chk-estado" value="Pendiente" /> Pendiente</label>
+          <label><input type="checkbox" class="chk-estado" value="Reprogramado" /> Reprog.</label>
+          <label><input type="checkbox" class="chk-estado" value="Cerrado" /> Cerrado</label>
         </div>
+      </div>
 
-        <div class="field">
-          <label for="filtro_estado">Estado (múltiple)</label>
-          <select id="filtro_estado" multiple>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Reprogramado">Reprogramado</option>
-            <option value="Cerrado">Cerrado</option>
-          </select>
-          <div class="hint">Tip: Ctrl/Cmd para seleccionar varios.</div>
-        </div>
+      <div class="fb-sep"></div>
 
-        <div class="field">
-          <label for="filtro_responsable">Responsable contiene</label>
-          <input id="filtro_responsable" type="text" placeholder="Ej: Maria José" />
-        </div>
+      <div class="fb-field">
+        <label>Responsable</label>
+        <input id="filtro_responsable" type="text" placeholder="Buscar..." />
+      </div>
 
-        <div class="field">
-          <label for="filtro_atrasado">Atrasado</label>
-          <select id="filtro_atrasado">
-            <option value="">(Todos)</option>
-            <option value="1">Sí</option>
-            <option value="0">No</option>
-          </select>
-        </div>
+      <div class="fb-field">
+        <label>Atrasado</label>
+        <select id="filtro_atrasado">
+          <option value="">(Todos)</option>
+          <option value="1">Sí</option>
+          <option value="0">No</option>
+        </select>
+      </div>
 
-        <!-- NUEVO: filtro único de fechas (sin desde/hasta) -->
-        <div class="panel__subtitle">Filtro de fecha (Día o Mes)</div>
+      <div class="fb-sep"></div>
 
-        <div class="grid3">
-          <div class="field">
-            <label for="date_field">¿Qué fecha?</label>
-            <select id="date_field">
-              <option value="">(Sin filtro)</option>
-              <option value="creacion">Creación</option>
-              <option value="entrega">Entrega</option>
-              <option value="cierre">Cierre</option>
-              <option value="reprog">Reprogramación</option>
-            </select>
-          </div>
+      <div class="fb-field">
+        <label>Tipo de fecha</label>
+        <select id="date_field">
+          <option value="">(Sin filtro)</option>
+          <option value="creacion">Creación</option>
+          <option value="entrega">Entrega</option>
+          <option value="cierre">Cierre</option>
+          <option value="reprog">Reprogramación</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <label>Modo</label>
+        <select id="date_mode">
+          <option value="day">Día</option>
+          <option value="month">Mes</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <label>Valor</label>
+        <input id="date_value" type="date" />
+      </div>
 
-          <div class="field">
-            <label for="date_mode">Tipo</label>
-            <select id="date_mode">
-              <option value="day">Día</option>
-              <option value="month">Mes</option>
-            </select>
-          </div>
+      <div class="fb-btns">
+        <button id="btn-filtrar" class="btn btn--primary" type="button">Aplicar</button>
+        <button id="btn-limpiar" class="btn btn--ghost" type="button">Limpiar</button>
+      </div>
+    </div>
 
-          <div class="field">
-            <label for="date_value">Valor</label>
-            <!-- se cambia dinámicamente entre date y month -->
-            <input id="date_value" type="date" />
-          </div>
-        </div>
+    <!-- Toolbar sobre tabla -->
+    <div class="tbl-toolbar">
+      <button id="btn-crear" class="btn btn--primary" type="button">+ Crear compromiso</button>
+      <button id="btn-exportar" class="btn btn--ghost" type="button">⬇ Exportar Excel</button>
+      <button id="btn-importar" class="btn btn--ghost" type="button">⬆ Importar Excel</button>
+      <input id="file-import" type="file" accept=".xlsx" style="display:none" />
+      <button id="btn-eliminar-seleccionados" class="btn btn--danger" type="button">🗑 Eliminar seleccionados</button>
+      <div class="tbl-toolbar__spacer"></div>
+      <label class="checkAll">
+        <input id="chk-todos" type="checkbox" />
+        <span>Seleccionar todos</span>
+      </label>
+    </div>
 
-        <div class="btnrow">
-          <button id="btn-filtrar" class="btn btn--primary" type="button">Aplicar</button>
-          <button id="btn-limpiar" class="btn btn--ghost" type="button">Limpiar</button>
-        </div>
-      </section>
+    <!-- Tabla -->
+    <section class="card" style="padding:0; overflow:hidden;">
+      <div class="tableWrap tableWrap--fixed">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="col-check"></th>
+              <th>Contrato</th>
+              <th>Responsable</th>
+              <th>Compromiso</th>
+              <th>Creación</th>
+              <th>Entrega</th>
+              <th>Estado</th>
+              <th>Reprog</th>
+              <th>Cierre</th>
+              <th>Atrasado</th>
+              <th>Obs.</th>
+              <th>Evidencia</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-compromisos"></tbody>
+        </table>
+      </div>
+    </section>
 
-      <!-- Panel acciones -->
-      <section class="panel">
-        <div class="panel__title">Acciones</div>
-
-        <div class="btncol">
-          <button id="btn-exportar" class="btn btn--ghost" type="button">⬇ Exportar Excel</button>
-
-          <button id="btn-importar" class="btn btn--ghost" type="button">⬆ Importar Excel</button>
-          <input id="file-import" type="file" accept=".xlsx" style="display:none" />
-
-          <button id="btn-eliminar-seleccionados" class="btn btn--danger" type="button">
-            🗑 Eliminar seleccionados
-          </button>
-        </div>
-      </section>
-    </aside>
-
-    <!-- ===== Main ===== -->
-    <main class="main">
-      <!-- Crear compromiso -->
-      <section class="card">
-        <div class="card__header">
-          <h2>Crear compromiso</h2>
-          <div class="card__subtitle">Registra el compromiso y la fecha acordada.</div>
-        </div>
-
-        <form id="form-compromiso" class="form">
-          <div class="form__row">
-            <div class="field">
-              <label for="contrato_id">Contrato</label>
-              <select id="contrato_id" required></select>
-              <div id="nuevo-contrato-row" style="display:none;margin-top:6px;gap:6px;align-items:center;">
-                <input id="nuevo-contrato-nombre" type="text" placeholder="Nombre del nuevo contrato..."
-                       style="flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;" />
-                <button type="button" id="btn-crear-contrato" class="btn btn--primary" style="white-space:nowrap;">Crear</button>
-                <button type="button" id="btn-cancelar-contrato" class="btn btn--ghost">✕</button>
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="responsable">Responsable</label>
-              <input id="responsable" type="text" placeholder="Nombre completo" required />
-            </div>
-
-            <div class="field">
-              <label for="fecha_entrega">Fecha entrega (acordada)</label>
-              <input id="fecha_entrega" type="date" required />
-            </div>
-          </div>
-
-          <div class="form__row form__row--2col">
-            <div class="field">
-              <label for="compromiso">Compromiso</label>
-              <textarea id="compromiso" rows="6" placeholder="Describe el compromiso con detalle..." required></textarea>
-            </div>
-
-            <div class="field">
-              <label for="observacion_general">Observación general (opcional)</label>
-              <textarea id="observacion_general" rows="6" placeholder="Notas, contexto o seguimiento..."></textarea>
-            </div>
-          </div>
-
-          <div class="form__actions">
-            <button class="btn btn--primary" type="submit">Guardar</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- Tabla -->
-      <section class="card">
-        <div class="card__header card__header--row">
-          <div>
-            <h2>Registros</h2>
-            <div class="card__subtitle">La tabla respeta filtros del panel izquierdo.</div>
-          </div>
-
-          <label class="checkAll">
-            <input id="chk-todos" type="checkbox" />
-            <span>Seleccionar todos</span>
-          </label>
-        </div>
-
-        <div class="tableWrap tableWrap--fixed">
-          <table class="table">
-            <thead>
-              <tr>
-                <th class="col-check"></th>
-                <th>Contrato</th>
-                <th>Responsable</th>
-                <th>Compromiso</th>
-                <th>Creación</th>
-                <th>Entrega</th>
-                <th>Estado</th>
-                <th>Reprog</th>
-                <th>Cierre</th>
-                <th>Atrasado</th>
-                <th>Obs.</th>
-                <th>Evidencia</th>
-                <th class="col-actions">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tbody-compromisos"></tbody>
-          </table>
-        </div>
-      </section>
-    </main>
   </div>
 
-  <!-- MODALES (igual que los tuyos) -->
+  <!-- ===== Modal Crear Compromiso ===== -->
+  <dialog id="dlg-crear" class="dlg dlg--wide">
+    <div class="dlg__head">
+      <div class="dlg__title">Crear compromiso</div>
+      <button class="iconbtn" id="btn-cancel-crear" type="button">✕</button>
+    </div>
+    <div class="dlg__body">
+      <form id="form-compromiso" class="form">
+        <div class="form__row">
+          <div class="field">
+            <label for="contrato_id">Contrato</label>
+            <select id="contrato_id" required></select>
+            <div id="nuevo-contrato-row" style="display:none;margin-top:6px;gap:6px;align-items:center;">
+              <input id="nuevo-contrato-nombre" type="text" placeholder="Nombre del nuevo contrato..."
+                     style="flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;" />
+              <button type="button" id="btn-crear-contrato" class="btn btn--primary" style="white-space:nowrap;">Crear</button>
+              <button type="button" id="btn-cancelar-contrato" class="btn btn--ghost">✕</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="responsable">Responsable</label>
+            <input id="responsable" type="text" placeholder="Nombre completo" required />
+          </div>
+          <div class="field">
+            <label for="fecha_entrega">Fecha entrega (acordada)</label>
+            <input id="fecha_entrega" type="date" required />
+          </div>
+        </div>
+        <div class="form__row form__row--2col">
+          <div class="field">
+            <label for="compromiso">Compromiso</label>
+            <textarea id="compromiso" rows="5" placeholder="Describe el compromiso con detalle..." required></textarea>
+          </div>
+          <div class="field">
+            <label for="observacion_general">Observación general (opcional)</label>
+            <textarea id="observacion_general" rows="5" placeholder="Notas, contexto o seguimiento..."></textarea>
+          </div>
+        </div>
+        <div class="dlg__actions">
+          <button type="button" class="btn btn--ghost" id="btn-cancel-crear-form">Cancelar</button>
+          <button type="submit" class="btn btn--primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal Reprogramar -->
   <dialog id="dlg-reprogramar" class="dlg">
     <div class="dlg__head">
       <div class="dlg__title">Reprogramar</div>
-      <button class="iconbtn" id="btn-cancel-reprog" type="button" title="Cerrar">✕</button>
+      <button class="iconbtn" id="btn-cancel-reprog" type="button">✕</button>
     </div>
     <div class="dlg__body">
       <div id="reprog-info" class="hint"></div>
@@ -255,10 +312,11 @@
     </div>
   </dialog>
 
+  <!-- Modal Cerrar -->
   <dialog id="dlg-cerrar" class="dlg dlg--wide">
     <div class="dlg__head">
       <div class="dlg__title">Cerrar compromiso</div>
-      <button class="iconbtn" id="btn-cancel-cerrar" type="button" title="Cerrar">✕</button>
+      <button class="iconbtn" id="btn-cancel-cerrar" type="button">✕</button>
     </div>
     <div class="dlg__body">
       <div id="cerrar-info" class="hint"></div>
@@ -270,7 +328,7 @@
         <input id="fecha_entrega_compromiso" type="date" />
       </div>
       <div style="margin-top:14px;">
-        <div style="font-weight:700; font-size:13px; margin-bottom:6px; color:var(--brand1);">Evidencia</div>
+        <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--brand1);">Evidencia</div>
         <div id="cerrar-evi-status" class="hint" style="margin-bottom:6px;">Verificando...</div>
         <button class="btn btn--ghost" id="btn-cerrar-evi-up" type="button">⬆ Subir evidencia</button>
         <input id="file-cerrar-evidencia" type="file" accept="image/*" style="display:none" />
@@ -285,24 +343,25 @@
     </div>
   </dialog>
 
+  <!-- Modal Historial -->
   <dialog id="dlg-historial" class="dlg dlg--wide">
     <div class="dlg__head">
       <div class="dlg__title">Historial de reprogramaciones</div>
-      <button class="iconbtn" id="btn-cerrar-historial" type="button" title="Cerrar">✕</button>
+      <button class="iconbtn" id="btn-cerrar-historial" type="button">✕</button>
     </div>
     <div class="dlg__body">
       <div id="historial-body"></div>
     </div>
   </dialog>
 
+  <!-- Modal Observación -->
   <dialog id="dlg-observacion" class="dlg dlg--wide">
     <div class="dlg__head">
       <div class="dlg__title">Observación</div>
-      <button class="iconbtn" id="btn-cancel-obs" type="button" title="Cerrar">✕</button>
+      <button class="iconbtn" id="btn-cancel-obs" type="button">✕</button>
     </div>
     <div class="dlg__body">
       <div id="obs-info" class="hint"></div>
-
       <div class="grid2" style="margin-top:10px;">
         <div class="field">
           <label for="obs-modo">Modo</label>
@@ -312,19 +371,16 @@
           </select>
         </div>
       </div>
-
       <div class="grid2" style="margin-top:10px;">
         <div class="field">
           <label for="obs-actual">Observación actual</label>
           <textarea id="obs-actual" rows="8" readonly></textarea>
         </div>
-
         <div class="field">
           <label for="obs-texto">Nueva observación</label>
           <textarea id="obs-texto" rows="8" placeholder="Escribe aquí..."></textarea>
         </div>
       </div>
-
       <div class="dlg__actions">
         <button id="btn-guardar-obs" class="btn btn--primary" type="button">Guardar</button>
       </div>

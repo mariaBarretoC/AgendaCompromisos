@@ -25,11 +25,17 @@ const btnEliminarSeleccionados = document.getElementById("btn-eliminar-seleccion
 const contratoSelect = document.getElementById("contrato_id");
 const form = document.getElementById("form-compromiso");
 
+// Modal crear
+const dlgCrear        = document.getElementById("dlg-crear");
+const btnCrear        = document.getElementById("btn-crear");
+const btnCancelCrear  = document.getElementById("btn-cancel-crear");
+const btnCancelCrearForm = document.getElementById("btn-cancel-crear-form");
+
 // =======================
 // Filtros
 // =======================
 const filtroContrato = document.getElementById("filtro_contrato");
-const filtroEstado = document.getElementById("filtro_estado");
+const filtroEstado = null; // sustituido por checkboxes .chk-estado
 const filtroResponsable = document.getElementById("filtro_responsable");
 const filtroAtrasado = document.getElementById("filtro_atrasado");
 
@@ -98,7 +104,7 @@ function toDateInputValue(dateStr) {
 }
 
 function getSelectedEstados() {
-  return [...filtroEstado.selectedOptions].map(o => o.value).filter(Boolean);
+  return [...document.querySelectorAll(".chk-estado:checked")].map(c => c.value);
 }
 
 // =======================
@@ -244,6 +250,7 @@ if (form) {
       });
 
       form.reset();
+      dlgCrear?.close();
       await cargarCompromisos(buildQueryFromFilters());
       alert("✅ Compromiso guardado");
     } catch (err) {
@@ -444,9 +451,7 @@ btnLimpiar?.addEventListener("click", async () => {
   if (filtroResponsable) filtroResponsable.value = "";
   if (filtroAtrasado) filtroAtrasado.value = "";
 
-  if (filtroEstado) {
-    [...filtroEstado.options].forEach(o => (o.selected = false));
-  }
+  document.querySelectorAll(".chk-estado").forEach(c => c.checked = false);
 
   if (dateField) dateField.value = "";
   if (dateMode) dateMode.value = "day";
@@ -642,6 +647,13 @@ tbody?.addEventListener("click", async (e) => {
     return;
   }
 });
+
+// =======================
+// Modal Crear Compromiso
+// =======================
+btnCrear?.addEventListener("click", () => { form?.reset(); dlgCrear?.showModal(); });
+btnCancelCrear?.addEventListener("click", () => dlgCrear?.close());
+btnCancelCrearForm?.addEventListener("click", () => dlgCrear?.close());
 
 // =======================
 // Modales
