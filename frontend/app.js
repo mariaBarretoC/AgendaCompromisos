@@ -268,9 +268,7 @@ function buildQueryFromFilters() {
 
   if (filtroContrato?.value) params.set("contrato_id", filtroContrato.value);
 
-  if (filtroEstado) {
-    getSelectedEstados().forEach((e) => params.append("estado", e));
-  }
+  getSelectedEstados().forEach((e) => params.append("estado", e));
 
   const resp = filtroResponsable?.value?.trim() || "";
   if (resp) params.set("responsable", resp);
@@ -583,9 +581,13 @@ tbody?.addEventListener("click", async (e) => {
     dlgCerrar.showModal();
 
     try {
-      await apiGet(`/compromisos/${id}/evidencia`);
-      cerrarTieneEvidencia = true;
-      cerrarEviStatus.innerHTML = `<span style="color:var(--success);">✓ Evidencia cargada</span>`;
+      const evi = await apiGet(`/compromisos/${id}/evidencia`);
+      cerrarTieneEvidencia = !!evi;
+      if (cerrarTieneEvidencia) {
+        cerrarEviStatus.innerHTML = `<span style="color:var(--success);">✓ Evidencia cargada</span>`;
+      } else {
+        cerrarEviStatus.innerHTML = `<span style="color:var(--danger);">Sin evidencia</span>`;
+      }
     } catch {
       cerrarTieneEvidencia = false;
       cerrarEviStatus.innerHTML = `<span style="color:var(--danger);">Sin evidencia</span>`;
